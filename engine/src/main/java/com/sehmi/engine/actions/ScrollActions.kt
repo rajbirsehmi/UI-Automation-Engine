@@ -11,8 +11,7 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
 import com.sehmi.engine.core.ComposeRuleScope
-import com.sehmi.engine.utils.runRobustly
-import com.sehmi.engine.utils.waitUntil
+import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -30,15 +29,15 @@ private val logger: Logger = LogManager.getLogger("ScrollActions")
  * @throws AssertionError if the node is not found or scrolling fails.
  */
 fun ComposeRuleScope.scrollToTag(targetTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting scrollToTag: targetTag=$targetTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting scrollToTag: targetTag=$targetTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Scroll to tag: $targetTag", targetTag) {
-        logger.debug("Performing scroll to tag: $targetTag")
+        logger.debugStep("Performing scroll to tag: $targetTag")
         try {
             composeRule.onNodeWithTag(targetTag, useUnmergedTree).performScrollTo()
         } catch (_: AssertionError) {}
         composeRule.waitForIdle()
     }
-    logger.debug("scrollToTag completed for tag: $targetTag")
+    logger.debugStep("scrollToTag completed for tag: $targetTag")
 }
 
 /**
@@ -53,15 +52,15 @@ fun ComposeRuleScope.scrollToTag(targetTag: String, useUnmergedTree: Boolean = f
  */
 @Suppress("unused")
 fun ComposeRuleScope.scrollToText(text: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting scrollToText: text=$text, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting scrollToText: text=$text, useUnmergedTree=$useUnmergedTree")
     runRobustly("Scroll to text: $text") {
-        logger.debug("Performing scroll to text: $text")
+        logger.debugStep("Performing scroll to text: $text")
         try {
             composeRule.onNodeWithText(text, useUnmergedTree = useUnmergedTree).performScrollTo()
         } catch (_: AssertionError) {}
         composeRule.waitForIdle()
     }
-    logger.debug("scrollToText completed for text: $text")
+    logger.debugStep("scrollToText completed for text: $text")
 }
 
 /**
@@ -76,14 +75,14 @@ fun ComposeRuleScope.scrollToText(text: String, useUnmergedTree: Boolean = false
  */
 @Suppress("unused")
 fun ComposeRuleScope.scrollAndClick(targetTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting scrollAndClick: targetTag=$targetTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting scrollAndClick: targetTag=$targetTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Scroll and click tag: $targetTag", targetTag) {
-        logger.debug("Calling scrollToTag for tag: $targetTag")
+        logger.debugStep("Calling scrollToTag for tag: $targetTag")
         scrollToTag(targetTag, useUnmergedTree = useUnmergedTree)
-        logger.debug("Calling clickOnTag for tag: $targetTag")
+        logger.debugStep("Calling clickOnTag for tag: $targetTag")
         clickOnTag(targetTag, useUnmergedTree = useUnmergedTree)
     }
-    logger.debug("scrollAndClick completed for tag: $targetTag")
+    logger.debugStep("scrollAndClick completed for tag: $targetTag")
 }
 
 /**
@@ -98,13 +97,13 @@ fun ComposeRuleScope.scrollAndClick(targetTag: String, useUnmergedTree: Boolean 
  * @throws AssertionError if the container is not found or scrolling fails.
  */
 fun ComposeRuleScope.scrollToIndex(containerTag: String, index: Int, useUnmergedTree: Boolean = false) {
-    logger.info("Starting scrollToIndex: containerTag=$containerTag, index=$index, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting scrollToIndex: containerTag=$containerTag, index=$index, useUnmergedTree=$useUnmergedTree")
     runRobustly("Scroll container $containerTag to index $index", containerTag) {
-        logger.debug("Performing scroll to index $index in container $containerTag")
+        logger.debugStep("Performing scroll to index $index in container $containerTag")
         composeRule.onNodeWithTag(containerTag, useUnmergedTree).performScrollToIndex(index)
         composeRule.waitForIdle()
     }
-    logger.debug("scrollToIndex completed for container $containerTag, index $index")
+    logger.debugStep("scrollToIndex completed for container $containerTag, index $index")
 }
 
 /**
@@ -120,13 +119,13 @@ fun ComposeRuleScope.scrollToIndex(containerTag: String, index: Int, useUnmerged
  */
 @Suppress("unused")
 fun ComposeRuleScope.scrollToKey(containerTag: String, key: Any, useUnmergedTree: Boolean = false) {
-    logger.info("Starting scrollToKey: containerTag=$containerTag, key=$key, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting scrollToKey: containerTag=$containerTag, key=$key, useUnmergedTree=$useUnmergedTree")
     runRobustly("Scroll container $containerTag to key $key", containerTag) {
-        logger.debug("Performing scroll to key {} in container {}", key, containerTag)
+        logger.debugStep("Performing scroll to key {} in container {}", key, containerTag)
         composeRule.onNodeWithTag(containerTag, useUnmergedTree).performScrollToKey(key)
         composeRule.waitForIdle()
     }
-    logger.debug("scrollToKey completed for container {}, key {}", containerTag, key)
+    logger.debugStep("scrollToKey completed for container {}, key {}", containerTag, key)
 }
 
 /**
@@ -150,20 +149,20 @@ fun ComposeRuleScope.swipeUntilVisible(
     maxSwipes: Int = 10,
     useUnmergedTree: Boolean = false,
 ) {
-    logger.info("Starting swipeUntilVisible: targetTag=$targetTag, direction=$direction, maxSwipes=$maxSwipes, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting swipeUntilVisible: targetTag=$targetTag, direction=$direction, maxSwipes=$maxSwipes, useUnmergedTree=$useUnmergedTree")
     runRobustly("Swipe until $targetTag is visible", targetTag) {
         var swiped = 0
         while (swiped < maxSwipes) {
             try {
-                logger.debug("Checking if target tag $targetTag exists (attempt ${swiped + 1})")
+                logger.debugStep("Checking if target tag $targetTag exists (attempt ${swiped + 1})")
                 this.waitUntil(timeoutMillis = 1000L) {
                     composeRule.onNodeWithTag(targetTag, useUnmergedTree).assertExists()
                 }
                 composeRule.waitForIdle()
-                logger.debug("Target tag $targetTag found")
+                logger.debugStep("Target tag $targetTag found")
                 return@runRobustly
             } catch (_: AssertionError) {
-                logger.debug("Target tag $targetTag not found, performing swipe $direction")
+                logger.debugStep("Target tag $targetTag not found, performing swipe $direction")
                 // Not found, perform global swipe on the root node
                 composeRule.onNodeWithTag("root").performTouchInput {
                     when (direction) {
@@ -179,6 +178,6 @@ fun ComposeRuleScope.swipeUntilVisible(
         }
         throw AssertionError("Node with tag $targetTag not found after $maxSwipes swipes.")
     }
-    logger.debug("swipeUntilVisible completed for tag: $targetTag")
+    logger.debugStep("swipeUntilVisible completed for tag: $targetTag")
 }
 

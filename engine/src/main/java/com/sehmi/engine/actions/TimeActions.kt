@@ -1,7 +1,7 @@
 package com.sehmi.engine.actions
 
 import com.sehmi.engine.core.ComposeRuleScope
-import com.sehmi.engine.utils.runRobustly
+import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -17,12 +17,12 @@ private val logger: Logger = LogManager.getLogger("TimeActions")
  * @param millis The amount of time to advance the clock by.
  */
 fun ComposeRuleScope.advanceTime(millis: Long) {
-    logger.info("Starting advanceTime: millis=$millis")
+    logger.infoStep("Starting advanceTime: millis=$millis")
     runRobustly("Advance time by $millis ms") {
-        logger.debug("Advancing clock by $millis ms")
+        logger.debugStep("Advancing clock by $millis ms")
         composeRule.mainClock.advanceTimeBy(millis)
     }
-    logger.debug("advanceTime completed")
+    logger.debugStep("advanceTime completed")
 }
 
 /**
@@ -32,12 +32,12 @@ fun ComposeRuleScope.advanceTime(millis: Long) {
  * Leverages the robust action pipeline ([runRobustly]).
  */
 fun ComposeRuleScope.advanceTimeByFrame() {
-    logger.info("Starting advanceTimeByFrame")
+    logger.infoStep("Starting advanceTimeByFrame")
     runRobustly("Advance time by one frame") {
-        logger.debug("Advancing clock by one frame")
+        logger.debugStep("Advancing clock by one frame")
         composeRule.mainClock.advanceTimeByFrame()
     }
-    logger.debug("advanceTimeByFrame completed")
+    logger.debugStep("advanceTimeByFrame completed")
 }
 
 /**
@@ -51,12 +51,12 @@ fun ComposeRuleScope.advanceTimeByFrame() {
  * @throws AssertionError if the condition is not met within [timeoutMillis].
  */
 fun ComposeRuleScope.advanceTimeUntil(timeoutMillis: Long = 1000L, condition: () -> Boolean) {
-    logger.info("Starting advanceTimeUntil: timeoutMillis=$timeoutMillis")
+    logger.infoStep("Starting advanceTimeUntil: timeoutMillis=$timeoutMillis")
     runRobustly("Advance time until condition met") {
-        logger.debug("Advancing clock until condition is met (timeout=$timeoutMillis)")
+        logger.debugStep("Advancing clock until condition is met (timeout=$timeoutMillis)")
         composeRule.mainClock.advanceTimeUntil(timeoutMillis, condition)
     }
-    logger.debug("advanceTimeUntil completed")
+    logger.debugStep("advanceTimeUntil completed")
 }
 
 /**
@@ -69,9 +69,9 @@ fun ComposeRuleScope.advanceTimeUntil(timeoutMillis: Long = 1000L, condition: ()
  * @param enabled True to enable auto-advance (default), false to disable.
  */
 fun ComposeRuleScope.setAutoAdvance(enabled: Boolean) {
-    logger.info("Starting setAutoAdvance: enabled=$enabled")
+    logger.infoStep("Starting setAutoAdvance: enabled=$enabled")
     composeRule.mainClock.autoAdvance = enabled
-    logger.debug("setAutoAdvance completed")
+    logger.debugStep("setAutoAdvance completed")
 }
 
 /**
@@ -83,16 +83,16 @@ fun ComposeRuleScope.setAutoAdvance(enabled: Boolean) {
  * @param block The block of code to execute while the clock is paused.
  */
 fun ComposeRuleScope.withPausedClock(block: () -> Unit) {
-    logger.info("Starting withPausedClock")
+    logger.infoStep("Starting withPausedClock")
     val wasAutoAdvance = composeRule.mainClock.autoAdvance
-    logger.debug("Pausing clock (previous autoAdvance state: $wasAutoAdvance)")
+    logger.debugStep("Pausing clock (previous autoAdvance state: $wasAutoAdvance)")
     composeRule.mainClock.autoAdvance = false
     try {
         block()
     } finally {
-        logger.debug("Restoring clock autoAdvance state to: $wasAutoAdvance")
+        logger.debugStep("Restoring clock autoAdvance state to: $wasAutoAdvance")
         composeRule.mainClock.autoAdvance = wasAutoAdvance
-        logger.debug("withPausedClock completed")
+        logger.debugStep("withPausedClock completed")
     }
 }
 

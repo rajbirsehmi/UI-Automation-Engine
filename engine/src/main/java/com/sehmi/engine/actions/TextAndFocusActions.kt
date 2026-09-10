@@ -4,8 +4,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.semantics.SemanticsActions
 import com.sehmi.engine.core.ComposeRuleScope
-import com.sehmi.engine.utils.runRobustly
-import com.sehmi.engine.utils.waitUntil
+import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -25,21 +24,27 @@ private val logger: Logger = LogManager.getLogger("TextAndFocusActions")
  * @throws AssertionError if the node is not found or input fails.
  */
 fun ComposeRuleScope.enterText(testTag: String, text: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting enterText: text='$text', testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting enterText: text='$text', testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Enter text '$text' into tag: $testTag", testTag) {
         this.waitUntil {
             val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: {}", testTag)
-                node.performScrollTo()
-            } catch (_: AssertionError) {}
-            logger.debug("Waiting for tag $testTag to be displayed and performing text input")
-            node.assertIsDisplayed()
-                .performTextInput(text)
-            composeRule.waitForIdle()
+                node.assertIsDisplayed()
+            } catch (e: AssertionError) {
+                try {
+                    logger.debugStep("Attempting to scroll to tag: {}", testTag)
+                    node.performScrollTo()
+                    node.assertIsDisplayed()
+                } catch (_: AssertionError) {
+                    throw e
+                }
+            }
+
+            logger.debugStep("Waiting for tag $testTag to be displayed and performing text input")
+            node.performTextInput(text)
         }
     }
-    logger.debug("enterText completed for tag: $testTag")
+    logger.debugStep("enterText completed for tag: $testTag")
 }
 
 /**
@@ -55,24 +60,30 @@ fun ComposeRuleScope.enterText(testTag: String, text: String, useUnmergedTree: B
  * @throws AssertionError if the node is not found, input fails, or verification fails.
  */
 fun ComposeRuleScope.replaceText(testTag: String, text: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting replaceText: text='$text', testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting replaceText: text='$text', testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Replace text with '$text' in tag: $testTag", testTag) {
         this.waitUntil {
             val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: {}", testTag)
-                node.performScrollTo()
-            } catch (_: AssertionError) {}
-            logger.debug("Performing text replacement in tag: $testTag")
-            node.assertIsDisplayed()
-                .performTextReplacement(text)
+                node.assertIsDisplayed()
+            } catch (e: AssertionError) {
+                try {
+                    logger.debugStep("Attempting to scroll to tag: {}", testTag)
+                    node.performScrollTo()
+                    node.assertIsDisplayed()
+                } catch (_: AssertionError) {
+                    throw e
+                }
+            }
+
+            logger.debugStep("Performing text replacement in tag: $testTag")
+            node.performTextReplacement(text)
             
-            composeRule.waitForIdle()
-            logger.debug("Verifying text replacement in tag: $testTag")
+            logger.debugStep("Verifying text replacement in tag: $testTag")
             node.assertTextContains(text)
         }
     }
-    logger.debug("replaceText completed for tag: $testTag")
+    logger.debugStep("replaceText completed for tag: $testTag")
 }
 
 /**
@@ -87,21 +98,21 @@ fun ComposeRuleScope.replaceText(testTag: String, text: String, useUnmergedTree:
  */
 @Suppress("unused")
 fun ComposeRuleScope.clearText(testTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting clearText: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting clearText: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Clear text in tag: $testTag", testTag) {
         this.waitUntil {
             val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: $testTag")
+                logger.debugStep("Attempting to scroll to tag: $testTag")
                 interaction.performScrollTo()
             } catch (_: AssertionError) {}
-            logger.debug("Performing text clearance in tag: $testTag")
+            logger.debugStep("Performing text clearance in tag: $testTag")
             interaction.assertIsDisplayed()
                 .performTextClearance()
             composeRule.waitForIdle()
         }
     }
-    logger.debug("clearText completed for tag: $testTag")
+    logger.debugStep("clearText completed for tag: $testTag")
 }
 
 /**
@@ -116,17 +127,17 @@ fun ComposeRuleScope.clearText(testTag: String, useUnmergedTree: Boolean = false
  */
 @Suppress("unused")
 fun ComposeRuleScope.pressImeAction(testTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting pressImeAction: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting pressImeAction: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Press IME action on tag: $testTag", testTag) {
         val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
         try {
-            logger.debug("Attempting to scroll to tag: $testTag")
+            logger.debugStep("Attempting to scroll to tag: $testTag")
             interaction.performScrollTo()
         } catch (_: AssertionError) {}
-        logger.debug("Performing IME action on tag: $testTag")
+        logger.debugStep("Performing IME action on tag: $testTag")
         interaction.performImeAction()
     }
-    logger.debug("pressImeAction completed for tag: $testTag")
+    logger.debugStep("pressImeAction completed for tag: $testTag")
 }
 
 /**
@@ -141,20 +152,20 @@ fun ComposeRuleScope.pressImeAction(testTag: String, useUnmergedTree: Boolean = 
  * @throws AssertionError if the node is not found or fails to gain focus.
  */
 fun ComposeRuleScope.requestFocus(testTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting requestFocus: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting requestFocus: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Request focus on tag: $testTag", testTag) {
         val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
         try {
-            logger.debug("Attempting to scroll to tag: $testTag")
+            logger.debugStep("Attempting to scroll to tag: $testTag")
             interaction.performScrollTo()
         } catch (_: AssertionError) {}
-        logger.debug("Requesting focus for tag: $testTag")
+        logger.debugStep("Requesting focus for tag: $testTag")
         interaction.performSemanticsAction(SemanticsActions.RequestFocus)
         composeRule.waitForIdle()
-        logger.debug("Verifying focus for tag: $testTag")
+        logger.debugStep("Verifying focus for tag: $testTag")
         composeRule.onNodeWithTag(testTag, useUnmergedTree).assertIsFocused()
     }
-    logger.debug("requestFocus completed for tag: $testTag")
+    logger.debugStep("requestFocus completed for tag: $testTag")
 }
 
 /**
@@ -171,19 +182,19 @@ fun ComposeRuleScope.requestFocus(testTag: String, useUnmergedTree: Boolean = fa
 @Suppress("unused")
 @OptIn(ExperimentalTestApi::class)
 fun ComposeRuleScope.performKeyInput(testTag: String, key: Key, useUnmergedTree: Boolean = false) {
-    logger.info("Starting performKeyInput: key=$key, testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting performKeyInput: key=$key, testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Press key $key on tag: $testTag", testTag) {
         val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
         try {
-            logger.debug("Attempting to scroll to tag: $testTag")
+            logger.debugStep("Attempting to scroll to tag: $testTag")
             interaction.performScrollTo()
         } catch (_: AssertionError) {}
-        logger.debug("Performing key input $key on tag: $testTag")
+        logger.debugStep("Performing key input $key on tag: $testTag")
         interaction.performKeyInput {
             keyDown(key)
             keyUp(key)
         }
     }
-    logger.debug("performKeyInput completed for tag: $testTag")
+    logger.debugStep("performKeyInput completed for tag: $testTag")
 }
 

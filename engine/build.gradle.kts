@@ -70,6 +70,7 @@ android {
         }
         create("hilt") {
             dimension = "di"
+            testInstrumentationRunner = "com.sehmi.engine.HiltTestRunner"
         }
     }
 }
@@ -92,6 +93,7 @@ dependencies {
     api(libs.junit)
     api(libs.androidx.junit)
     api(libs.androidx.core.ktx)
+    api(libs.androidx.test.runner)
     api(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
@@ -104,7 +106,7 @@ dependencies {
 
     // Logging (Log4j2)
     api(libs.log4j.api)
-    api(libs.log4j.core)
+    implementation(libs.log4j.core)
 
     // Embed custom lint rules into the AAR
     lintPublish(project(":engine-lint"))
@@ -113,6 +115,8 @@ dependencies {
     "hiltImplementation"(libs.hilt.android)
     "hiltImplementation"(libs.hilt.testing)
     "kspHilt"(libs.hilt.compiler)
+    "androidTestHiltImplementation"(libs.hilt.testing)
+    "kspAndroidTestHilt"(libs.hilt.compiler)
 }
 
 publishing {
@@ -120,7 +124,7 @@ publishing {
         register<MavenPublication>("maven") {
             groupId = "com.github.rajbirsehmi.UI-Engine"
             artifactId = "robot-testing-engine"
-            version = "0.2.5-alpha"
+            version = "0.3.0-alpha"
 
             afterEvaluate {
                 from(components["engine"])

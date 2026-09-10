@@ -2,11 +2,11 @@ package com.sehmi.engine
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import dagger.hilt.EntryPoints
-import dagger.hilt.android.testing.HiltAndroidRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import kotlin.reflect.KProperty
@@ -15,8 +15,8 @@ import kotlin.reflect.KProperty
  * A [ComposeTestRule] wrapper that integrates with Hilt and the UI Automation Engine.
  */
 class HiltAutomationComposeTestRule<A : ComponentActivity>(
-    private val composeRule: AndroidComposeTestRule<*, A>
-) : ComposeTestRule by composeRule {
+    private val composeRule: AndroidComposeTestRule<*, A>,
+) : ComposeContentTestRule by composeRule {
 
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
@@ -33,15 +33,16 @@ class HiltAutomationComposeTestRule<A : ComponentActivity>(
 }
 
 /**
- * Creates a [ComposeTestRule] that integrates Hilt injection with the UI Automation Engine.
+ * Creates a [ComposeContentTestRule] that integrates Hilt injection with the UI Automation Engine.
  *
  * @param activityClass The Activity class to launch for the test.
  */
+@Suppress("UNUSED_PARAMETER", "DEPRECATION")
 fun <A : ComponentActivity> UiEngine.createHiltRule(
     activityClass: Class<A>
-): ComposeTestRule {
-    val composeRule = createAndroidComposeRule<A>(activityClass)
-    return HiltAutomationComposeTestRule<A>(composeRule)
+): ComposeContentTestRule {
+    val composeRule = createAndroidComposeRule(activityClass)
+    return HiltAutomationComposeTestRule(composeRule)
 }
 
 /**

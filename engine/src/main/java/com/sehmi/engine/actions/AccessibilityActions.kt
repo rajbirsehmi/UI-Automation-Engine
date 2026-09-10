@@ -6,7 +6,7 @@ import androidx.compose.ui.test.*
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import com.sehmi.engine.core.ComposeRuleScope
-import com.sehmi.engine.utils.runRobustly
+import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -23,7 +23,7 @@ private val logger: Logger = LogManager.getLogger("AccessibilityActions")
  * @param direction The direction to move focus. [Direction.RIGHT] for next, [Direction.LEFT] for previous.
  */
 fun ComposeRuleScope.navigateByAccessibility(direction: Direction) {
-    logger.info("Starting navigateByAccessibility: direction=$direction")
+    logger.infoStep("Starting navigateByAccessibility: direction=$direction")
     runRobustly("Navigate accessibility $direction") {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         if (direction == Direction.RIGHT) {
@@ -34,7 +34,7 @@ fun ComposeRuleScope.navigateByAccessibility(direction: Direction) {
         Thread.sleep(100) // Small delay for system focus manager to catch up
         composeRule.waitForIdle()
     }
-    logger.debug("navigateByAccessibility completed")
+    logger.debugStep("navigateByAccessibility completed")
 }
 
 /**
@@ -48,16 +48,16 @@ fun ComposeRuleScope.navigateByAccessibility(direction: Direction) {
  * @throws AssertionError if any node in the sequence fails to receive focus.
  */
 fun ComposeRuleScope.assertFocusOrder(expectedTags: List<String>) {
-    logger.info("Starting assertFocusOrder: expectedTags=$expectedTags")
+    logger.infoStep("Starting assertFocusOrder: expectedTags=$expectedTags")
     runRobustly("Assert focus order") {
         expectedTags.forEachIndexed { index, tag ->
-            logger.debug("Verifying focus for tag at index {}: {}", index, tag)
+            logger.debugStep("Verifying focus for tag at index {}: {}", index, tag)
             // Ensure focus is on the element
             requestFocus(tag)
             composeRule.onNodeWithTag(tag).assert(isFocused())
         }
     }
-    logger.debug("assertFocusOrder completed")
+    logger.debugStep("assertFocusOrder completed")
 }
 
 /**
@@ -72,11 +72,11 @@ fun ComposeRuleScope.assertFocusOrder(expectedTags: List<String>) {
  *                        list of non-compliant test tags.
  */
 fun ComposeRuleScope.assertInteractiveNodesHaveLabels() {
-    logger.info("Starting assertInteractiveNodesHaveLabels")
+    logger.infoStep("Starting assertInteractiveNodesHaveLabels")
     runRobustly("Assert interactive nodes have labels") {
         val interactiveNodes = composeRule.onAllNodes(hasClickAction())
         val nodesCount = interactiveNodes.fetchSemanticsNodes().size
-        logger.debug("Found $nodesCount interactive nodes to audit")
+        logger.debugStep("Found $nodesCount interactive nodes to audit")
         
         val missingLabelTags = mutableListOf<String>()
         
@@ -94,5 +94,5 @@ fun ComposeRuleScope.assertInteractiveNodesHaveLabels() {
             throw AssertionError("Accessibility Audit Failed: The following interactive nodes are missing labels: $missingLabelTags")
         }
     }
-    logger.debug("assertInteractiveNodesHaveLabels completed")
+    logger.debugStep("assertInteractiveNodesHaveLabels completed")
 }

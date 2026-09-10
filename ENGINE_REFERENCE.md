@@ -19,6 +19,38 @@ This document provides an exhaustive reference for the `:engine` module, detaili
 
 ---
 
+## Global Configuration
+
+### `UiEngine.configure(Configuration)`
+Allows global customization of the engine's behavior. Call this in a `@BeforeClass` or global test initializer.
+
+#### Example Usage:
+```kotlin
+@BeforeClass
+@JvmStatic
+fun setupEngine() {
+    UiEngine.configure(
+        UiEngine.Configuration(
+            defaultTimeoutMillis = 8000L,
+            pollIntervalMillis = 150L,
+            verboseLogging = false,
+            autoCaptureScreenshots = true,
+            autoDumpSemantics = true
+        )
+    )
+}
+```
+
+| Property | Default | Description |
+| :--- | :--- | :--- |
+| `defaultTimeoutMillis` | `5000L` | Maximum time to wait for a robust action or assertion. |
+| `pollIntervalMillis` | `100L` | Interval between polling attempts in `waitUntil`. |
+| `autoCaptureScreenshots`| `true` | Automatically takes a screenshot on failure. |
+| `autoDumpSemantics` | `true` | Automatically dumps the unmerged tree on failure. |
+| `verboseLogging` | `true` | Enables high-level "Starting/Completed" logs for every step. |
+
+---
+
 ## Core Architecture
 
 ### `UiEngine` (Singleton)

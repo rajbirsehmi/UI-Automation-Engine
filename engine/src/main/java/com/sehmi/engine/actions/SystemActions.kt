@@ -6,7 +6,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import com.sehmi.engine.core.ComposeRuleScope
-import com.sehmi.engine.utils.runRobustly
+import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.File
@@ -31,12 +31,12 @@ enum class Orientation {
  * performed (e.g., already at the home screen).
  */
 fun ComposeRuleScope.pressBack() {
-    logger.info("Starting pressBack")
+    logger.infoStep("Starting pressBack")
     composeRule.waitForIdle()
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    logger.debug("Performing system back button press")
+    logger.debugStep("Performing system back button press")
     device.pressBack()
-    logger.debug("pressBack completed")
+    logger.debugStep("pressBack completed")
 }
 
 /**
@@ -45,12 +45,12 @@ fun ComposeRuleScope.pressBack() {
  * Useful for testing app backgrounding and resumption scenarios.
  */
 fun ComposeRuleScope.pressHome() {
-    logger.info("Starting pressHome")
+    logger.infoStep("Starting pressHome")
     composeRule.waitForIdle()
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    logger.debug("Performing system home button press")
+    logger.debugStep("Performing system home button press")
     device.pressHome()
-    logger.debug("pressHome completed")
+    logger.debugStep("pressHome completed")
 }
 
 /**
@@ -61,16 +61,16 @@ fun ComposeRuleScope.pressHome() {
  */
 @Suppress("unused")
 fun ComposeRuleScope.rotateScreen(orientation: Orientation) {
-    logger.info("Starting rotateScreen: orientation=$orientation")
+    logger.infoStep("Starting rotateScreen: orientation=$orientation")
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    logger.debug("Rotating device to {}", orientation)
+    logger.debugStep("Rotating device to {}", orientation)
     when (orientation) {
         Orientation.PORTRAIT -> device.setOrientationNatural()
         Orientation.LANDSCAPE -> device.setOrientationLeft()
     }
-    logger.debug("Waiting for Compose UI to idle after rotation")
+    logger.debugStep("Waiting for Compose UI to idle after rotation")
     composeRule.waitForIdle()
-    logger.debug("rotateScreen completed")
+    logger.debugStep("rotateScreen completed")
 }
 
 /**
@@ -83,19 +83,19 @@ fun ComposeRuleScope.rotateScreen(orientation: Orientation) {
  */
 @Suppress("unused")
 fun ComposeRuleScope.handlePermissionDialog(allow: Boolean) {
-    logger.info("Starting handlePermissionDialog: allow=$allow")
+    logger.infoStep("Starting handlePermissionDialog: allow=$allow")
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     val buttonText = if (allow) "Allow" else "Deny"
-    logger.debug("Searching for permission dialog button with text matching '$buttonText'")
+    logger.debugStep("Searching for permission dialog button with text matching '$buttonText'")
     // Use regex to handle different OS versions/locales
     val permissionButton = device.findObject(UiSelector().textMatches("(?i)($buttonText|Allow|Grant).*"))
     if (permissionButton.exists()) {
-        logger.debug("Permission button found, clicking")
+        logger.debugStep("Permission button found, clicking")
         permissionButton.click()
         composeRule.waitForIdle()
-        logger.debug("Permission dialog handled and UI idle")
+        logger.debugStep("Permission dialog handled and UI idle")
     } else {
-        logger.debug("Permission button not found")
+        logger.debugStep("Permission button not found")
     }
 }
 
@@ -110,11 +110,11 @@ fun ComposeRuleScope.handlePermissionDialog(allow: Boolean) {
  */
 @Suppress("unused")
 fun ComposeRuleScope.waitForSystemWindow(packageName: String, timeoutMillis: Long = 5000) {
-    logger.info("Starting waitForSystemWindow: packageName=$packageName, timeoutMillis=$timeoutMillis")
+    logger.infoStep("Starting waitForSystemWindow: packageName=$packageName, timeoutMillis=$timeoutMillis")
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    logger.debug("Waiting for package $packageName to become active")
+    logger.debugStep("Waiting for package $packageName to become active")
     device.wait(Until.hasObject(By.pkg(packageName)), timeoutMillis)
-    logger.debug("waitForSystemWindow completed")
+    logger.debugStep("waitForSystemWindow completed")
 }
 
 /**
@@ -127,14 +127,14 @@ fun ComposeRuleScope.waitForSystemWindow(packageName: String, timeoutMillis: Lon
  * @param name The base name for the screenshot file (excluding extension).
  */
 internal fun takeScreenshot(name: String) {
-    logger.info("Starting takeScreenshot: name=$name")
+    logger.infoStep("Starting takeScreenshot: name=$name")
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     val context = InstrumentationRegistry.getInstrumentation().targetContext
     val path = context.externalCacheDir ?: context.cacheDir
     val file = File(path, "$name.png")
-    logger.debug("Saving screenshot to: ${file.absolutePath}")
+    logger.debugStep("Saving screenshot to: ${file.absolutePath}")
     device.takeScreenshot(file)
-    logger.debug("takeScreenshot completed")
+    logger.debugStep("takeScreenshot completed")
 }
 
 /**
@@ -146,14 +146,14 @@ internal fun takeScreenshot(name: String) {
  */
 @Suppress("unused")
 fun ComposeRuleScope.openNotificationShade() {
-    logger.info("Starting openNotificationShade")
+    logger.infoStep("Starting openNotificationShade")
     runRobustly("Open notification shade") {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        logger.debug("Performing system notification shade expansion")
+        logger.debugStep("Performing system notification shade expansion")
         device.openNotification()
         composeRule.waitForIdle()
     }
-    logger.debug("openNotificationShade completed")
+    logger.debugStep("openNotificationShade completed")
 }
 
 /**
@@ -169,28 +169,28 @@ fun ComposeRuleScope.openNotificationShade() {
  */
 @Suppress("unused")
 fun ComposeRuleScope.clickNotification(text: String, timeoutMillis: Long = 5000L) {
-    logger.info("Starting clickNotification: text='$text'")
+    logger.infoStep("Starting clickNotification: text='$text'")
     runRobustly("Click notification with text: $text") {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         
         // Ensure shade is open
         if (!device.hasObject(By.textContains(text))) {
-            logger.debug("Notification not visible, opening shade")
+            logger.debugStep("Notification not visible, opening shade")
             device.openNotification()
         }
         
-        logger.debug("Waiting for notification with text '$text'")
+        logger.debugStep("Waiting for notification with text '$text'")
         val notification = device.wait(Until.findObject(By.textContains(text)), timeoutMillis)
         
         if (notification != null) {
-            logger.debug("Notification found, clicking")
+            logger.debugStep("Notification found, clicking")
             notification.click()
             composeRule.waitForIdle()
         } else {
             throw AssertionError("Notification with text '$text' not found after ${timeoutMillis}ms")
         }
     }
-    logger.debug("clickNotification completed for text: $text")
+    logger.debugStep("clickNotification completed for text: $text")
 }
 
 /**
@@ -205,21 +205,21 @@ fun ComposeRuleScope.clickNotification(text: String, timeoutMillis: Long = 5000L
  */
 @Suppress("unused")
 fun ComposeRuleScope.toggleQuickSetting(settingName: String) {
-    logger.info("Starting toggleQuickSetting: settingName=$settingName")
+    logger.infoStep("Starting toggleQuickSetting: settingName=$settingName")
     runRobustly("Toggle quick setting: $settingName") {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         
-        logger.debug("Opening quick settings (double swipe down)")
+        logger.debugStep("Opening quick settings (double swipe down)")
         device.openQuickSettings()
         
-        logger.debug("Searching for quick setting tile: $settingName")
+        logger.debugStep("Searching for quick setting tile: $settingName")
         var tile = device.wait(Until.findObject(By.descContains(settingName)), 2000L)
         if (tile == null) {
             tile = device.wait(Until.findObject(By.textContains(settingName)), 2000L)
         }
         
         if (tile != null) {
-            logger.debug("Quick setting tile found, clicking")
+            logger.debugStep("Quick setting tile found, clicking")
             tile.click()
             composeRule.waitForIdle()
             // Close quick settings
@@ -228,6 +228,6 @@ fun ComposeRuleScope.toggleQuickSetting(settingName: String) {
             throw AssertionError("Quick setting tile '$settingName' not found.")
         }
     }
-    logger.debug("toggleQuickSetting completed for setting: $settingName")
+    logger.debugStep("toggleQuickSetting completed for setting: $settingName")
 }
 

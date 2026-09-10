@@ -14,7 +14,7 @@ import com.sehmi.engine.actions.takeScreenshot
 import com.sehmi.engine.assertions.assertTagDisplayed
 import com.sehmi.engine.core.ComposeRuleScope
 import com.sehmi.engine.matchers.printUnmergedTree
-import com.sehmi.engine.utils.waitUntil
+import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -49,7 +49,7 @@ class AdvancedActionBuilder(
      */
     fun gesture(tag: String? = targetTag, block: TouchInjectionScope.() -> Unit) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in gesture call.")
-        logger.debug("Executing advanced gesture on tag: $tagToUse")
+        logger.debugStep("Executing advanced gesture on tag: $tagToUse")
         composeRule.onNodeWithTag(tagToUse).performTouchInput(block)
     }
 
@@ -68,7 +68,7 @@ class AdvancedActionBuilder(
     @OptIn(ExperimentalTestApi::class)
     fun keySequence(keys: List<Key>, tag: String? = targetTag) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in keySequence call.")
-        logger.debug("Executing advanced key sequence {} on tag: {}", keys, tagToUse)
+        logger.debugStep("Executing advanced key sequence {} on tag: {}", keys, tagToUse)
         composeRule.onNodeWithTag(tagToUse).performKeyInput {
             keys.forEach { 
                 keyDown(it)
@@ -90,7 +90,7 @@ class AdvancedActionBuilder(
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> semantics(key: SemanticsPropertyKey<T>, tag: String? = targetTag) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in semantics call.")
-        logger.debug("Executing advanced semantics action {} on tag: {}", key, tagToUse)
+        logger.debugStep("Executing advanced semantics action {} on tag: {}", key, tagToUse)
         val interaction = composeRule.onNodeWithTag(tagToUse)
         try {
             // Raw execution of the semantics action.
@@ -113,7 +113,7 @@ class AdvancedActionBuilder(
     @Suppress("unused")
     fun rawNodeInteraction(tag: String? = targetTag, block: SemanticsNodeInteraction.() -> Unit) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in rawNodeInteraction call.")
-        logger.debug("Executing raw node interaction on tag: $tagToUse")
+        logger.debugStep("Executing raw node interaction on tag: $tagToUse")
         composeRule.onNodeWithTag(tagToUse).block()
     }
 }
@@ -138,29 +138,29 @@ fun ComposeRuleScope.executeAdvancedAction(
     timeoutMillis: Long = 5000L,
     block: AdvancedActionBuilder.() -> Unit,
 ) {
-    logger.info("Starting executeAdvancedAction: testTag=${testTag ?: "N/A"}, timeoutMillis=$timeoutMillis")
+    logger.infoStep("Starting executeAdvancedAction: testTag=${testTag ?: "N/A"}, timeoutMillis=$timeoutMillis")
     try {
-        logger.debug("Waiting for Compose UI to idle")
+        logger.debugStep("Waiting for Compose UI to idle")
         composeRule.waitForIdle()
 
         // Verify visibility if tag is provided
         if (testTag != null) {
-            logger.debug("Verifying visibility for tag: $testTag")
+            logger.debugStep("Verifying visibility for tag: $testTag")
             assertTagDisplayed(testTag)
         }
 
         // Wrap execution in flakiness retry logic
-        logger.debug("Executing advanced action block within waitUntil loop")
+        logger.debugStep("Executing advanced action block within waitUntil loop")
         waitUntil(timeoutMillis = timeoutMillis) {
             val builder = AdvancedActionBuilder(composeRule, testTag)
             builder.block()
         }
 
-        logger.debug("Action block finished, waiting for UI to idle")
+        logger.debugStep("Action block finished, waiting for UI to idle")
         composeRule.waitForIdle()
     } catch (e: Throwable) {
         // Resilience: Capture diagnostics before rethrowing as AssertionError
-        logger.debug("Advanced action failed. Capturing diagnostics...")
+        logger.debugStep("Advanced action failed. Capturing diagnostics...")
         printUnmergedTree(testTag)
         takeScreenshot("ADVANCED_ACTION_FAILURE_${System.currentTimeMillis()}")
         
@@ -170,6 +170,6 @@ fun ComposeRuleScope.executeAdvancedAction(
             e
         )
     }
-    logger.debug("executeAdvancedAction completed")
+    logger.debugStep("executeAdvancedAction completed")
 }
 

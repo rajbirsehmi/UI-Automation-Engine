@@ -1,10 +1,11 @@
+@file:Suppress("unused")
+
 package com.sehmi.engine.actions
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import com.sehmi.engine.core.ComposeRuleScope
-import com.sehmi.engine.utils.runRobustly
-import com.sehmi.engine.utils.waitUntil
+import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import kotlin.math.cos
@@ -40,26 +41,30 @@ enum class Direction {
  * @throws AssertionError if the node is not found or interaction fails after retries.
  */
 fun ComposeRuleScope.clickOnTag(testTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting clickOnTag: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting clickOnTag: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Click on tag: $testTag", testTag) {
         waitUntil {
             val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: {}", testTag)
-                interaction.performScrollTo()
-            } catch (_: AssertionError) {
-                // Ignore if scroll parent not found
+                interaction.assertIsDisplayed()
+            } catch (e: AssertionError) {
+                try {
+                    logger.debugStep("Attempting to scroll to tag: {}", testTag)
+                    interaction.performScrollTo()
+                    interaction.assertIsDisplayed()
+                } catch (_: AssertionError) {
+                    throw e
+                }
             }
-            logger.debug("Waiting for tag $testTag to be displayed and enabled")
-            interaction
-                .assertIsDisplayed()
-                .assertIsEnabled()
-            logger.debug("Performing semantics click on tag: $testTag")
+            
+            logger.debugStep("Waiting for tag $testTag to be enabled")
+            interaction.assertIsEnabled()
+            
+            logger.debugStep("Performing semantics click on tag: $testTag")
             interaction.performClick()
-            composeRule.waitForIdle()
         }
     }
-    logger.debug("clickOnTag completed for tag: $testTag")
+    logger.debugStep("clickOnTag completed for tag: $testTag")
 }
 
 /**
@@ -76,26 +81,30 @@ fun ComposeRuleScope.clickOnTag(testTag: String, useUnmergedTree: Boolean = fals
  */
 @Suppress("unused")
 fun ComposeRuleScope.clickOnText(text: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting clickOnText: text=$text, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting clickOnText: text=$text, useUnmergedTree=$useUnmergedTree")
     runRobustly("Click on text: $text") {
         waitUntil {
             val interaction = composeRule.onNodeWithText(text, useUnmergedTree = useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to text: {}", text)
-                interaction.performScrollTo()
-            } catch (_: AssertionError) {
-                // Ignore
+                interaction.assertIsDisplayed()
+            } catch (e: AssertionError) {
+                try {
+                    logger.debugStep("Attempting to scroll to text: {}", text)
+                    interaction.performScrollTo()
+                    interaction.assertIsDisplayed()
+                } catch (_: AssertionError) {
+                    throw e
+                }
             }
-            logger.debug("Waiting for text '$text' to be displayed and enabled")
-            interaction
-                .assertIsDisplayed()
-                .assertIsEnabled()
-            logger.debug("Performing semantics click on text: $text")
+
+            logger.debugStep("Waiting for text '$text' to be enabled")
+            interaction.assertIsEnabled()
+
+            logger.debugStep("Performing semantics click on text: $text")
             interaction.performClick()
-            composeRule.waitForIdle()
         }
     }
-    logger.debug("clickOnText completed for text: $text")
+    logger.debugStep("clickOnText completed for text: $text")
 }
 
 /**
@@ -109,24 +118,24 @@ fun ComposeRuleScope.clickOnText(text: String, useUnmergedTree: Boolean = false)
  * @throws AssertionError if the node is not found or interaction fails after retries.
  */
 fun ComposeRuleScope.longClickTag(testTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting longClickTag: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting longClickTag: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Long click on tag: $testTag", testTag) {
         waitUntil {
             val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: $testTag")
+                logger.debugStep("Attempting to scroll to tag: $testTag")
                 interaction.performScrollTo()
             } catch (_: AssertionError) {
                 // Ignore
             }
-            logger.debug("Waiting for tag $testTag to be displayed")
+            logger.debugStep("Waiting for tag $testTag to be displayed")
             interaction.assertIsDisplayed()
-            logger.debug("Performing long click on tag: $testTag")
+            logger.debugStep("Performing long click on tag: $testTag")
             interaction.performTouchInput { longClick() }
             composeRule.waitForIdle()
         }
     }
-    logger.debug("longClickTag completed for tag: $testTag")
+    logger.debugStep("longClickTag completed for tag: $testTag")
 }
 
 /**
@@ -141,23 +150,23 @@ fun ComposeRuleScope.longClickTag(testTag: String, useUnmergedTree: Boolean = fa
  */
 @Suppress("unused")
 fun ComposeRuleScope.longClickText(text: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting longClickText: text=$text, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting longClickText: text=$text, useUnmergedTree=$useUnmergedTree")
     runRobustly("Long click on text: $text") {
         waitUntil {
             val interaction = composeRule.onNodeWithText(text, useUnmergedTree = useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to text: {}", text)
+                logger.debugStep("Attempting to scroll to text: {}", text)
                 interaction.performScrollTo()
             } catch (_: AssertionError) {
                 // Ignore
             }
-            logger.debug("Waiting for text '$text' to be displayed")
+            logger.debugStep("Waiting for text '$text' to be displayed")
             interaction.assertIsDisplayed()
-            logger.debug("Performing long click on text: $text")
+            logger.debugStep("Performing long click on text: $text")
             interaction.performTouchInput { longClick() }
         }
     }
-    logger.debug("longClickText completed for text: $text")
+    logger.debugStep("longClickText completed for text: $text")
 }
 
 /**
@@ -171,24 +180,24 @@ fun ComposeRuleScope.longClickText(text: String, useUnmergedTree: Boolean = fals
  * @throws AssertionError if the node is not found or interaction fails after retries.
  */
 fun ComposeRuleScope.doubleClickTag(testTag: String, useUnmergedTree: Boolean = false) {
-    logger.info("Starting doubleClickTag: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting doubleClickTag: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Double click on tag: $testTag", testTag) {
         waitUntil {
             val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: $testTag")
+                logger.debugStep("Attempting to scroll to tag: $testTag")
                 interaction.performScrollTo()
             } catch (_: AssertionError) {
                 // Ignore
             }
-            logger.debug("Waiting for tag $testTag to be displayed")
+            logger.debugStep("Waiting for tag $testTag to be displayed")
             interaction.assertIsDisplayed()
-            logger.debug("Performing double click on tag: $testTag")
+            logger.debugStep("Performing double click on tag: $testTag")
             interaction.performTouchInput { doubleClick() }
             composeRule.waitForIdle()
         }
     }
-    logger.debug("doubleClickTag completed for tag: $testTag")
+    logger.debugStep("doubleClickTag completed for tag: $testTag")
 }
 
 /**
@@ -204,19 +213,19 @@ fun ComposeRuleScope.doubleClickTag(testTag: String, useUnmergedTree: Boolean = 
  */
 @Suppress("unused")
 fun ComposeRuleScope.swipe(testTag: String, direction: Direction, useUnmergedTree: Boolean = false) {
-    logger.info("Starting swipe: testTag=$testTag, direction=$direction, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting swipe: testTag=$testTag, direction=$direction, useUnmergedTree=$useUnmergedTree")
     runRobustly("Swipe $direction on tag: $testTag", testTag) {
         waitUntil {
             val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: {}", testTag)
+                logger.debugStep("Attempting to scroll to tag: {}", testTag)
                 interaction.performScrollTo()
             } catch (_: AssertionError) {
                 // Ignore
             }
             interaction
                 .performTouchInput {
-                    logger.debug("Performing swipe {} on tag: {}", direction, testTag)
+                    logger.debugStep("Performing swipe {} on tag: {}", direction, testTag)
                     when (direction) {
                         Direction.UP -> swipeUp()
                         Direction.DOWN -> swipeDown()
@@ -226,7 +235,7 @@ fun ComposeRuleScope.swipe(testTag: String, direction: Direction, useUnmergedTre
                 }
         }
     }
-    logger.debug("swipe completed for tag: $testTag")
+    logger.debugStep("swipe completed for tag: $testTag")
 }
 
 /**
@@ -241,32 +250,32 @@ fun ComposeRuleScope.swipe(testTag: String, direction: Direction, useUnmergedTre
  */
 @Suppress("unused")
 fun ComposeRuleScope.dragAndDrop(sourceTag: String, targetTag: String) {
-    logger.info("Starting dragAndDrop: sourceTag=$sourceTag, targetTag=$targetTag")
+    logger.infoStep("Starting dragAndDrop: sourceTag=$sourceTag, targetTag=$targetTag")
     runRobustly("Drag from $sourceTag to $targetTag", sourceTag) {
         try {
-            logger.debug("Scrolling to source tag: $sourceTag")
+            logger.debugStep("Scrolling to source tag: $sourceTag")
             composeRule.onNodeWithTag(sourceTag).performScrollTo()
         } catch (e: AssertionError) {}
         try {
-            logger.debug("Scrolling to target tag: $targetTag")
+            logger.debugStep("Scrolling to target tag: $targetTag")
             composeRule.onNodeWithTag(targetTag).performScrollTo()
         } catch (e: AssertionError) {}
         
-        logger.debug("Calculating centers for drag and drop")
+        logger.debugStep("Calculating centers for drag and drop")
         val sourceNode = composeRule.onNodeWithTag(sourceTag).fetchSemanticsNode()
         val targetNode = composeRule.onNodeWithTag(targetTag).fetchSemanticsNode()
         
         val sourceCenter = sourceNode.boundsInRoot.center
         val targetCenter = targetNode.boundsInRoot.center
         
-        logger.debug("Performing drag from $sourceCenter to $targetCenter")
+        logger.debugStep("Performing drag from $sourceCenter to $targetCenter")
         composeRule.onNodeWithTag(sourceTag).performTouchInput {
             down(sourceCenter)
             moveTo(targetCenter)
             up()
         }
     }
-    logger.debug("dragAndDrop completed from $sourceTag to $targetTag")
+    logger.debugStep("dragAndDrop completed from $sourceTag to $targetTag")
 }
 
 /**
@@ -283,16 +292,16 @@ fun ComposeRuleScope.dragAndDrop(sourceTag: String, targetTag: String) {
 @Suppress("unused")
 @OptIn(ExperimentalTestApi::class)
 fun ComposeRuleScope.pinchToZoom(testTag: String, zoomIn: Boolean = true, useUnmergedTree: Boolean = false) {
-    logger.info("Starting pinchToZoom: testTag=$testTag, zoomIn=$zoomIn, useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting pinchToZoom: testTag=$testTag, zoomIn=$zoomIn, useUnmergedTree=$useUnmergedTree")
     runRobustly("${if (zoomIn) "Zoom In" else "Zoom Out"} on tag: $testTag", testTag) {
         waitUntil {
             val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
-                logger.debug("Attempting to scroll to tag: $testTag")
+                logger.debugStep("Attempting to scroll to tag: $testTag")
                 interaction.performScrollTo()
             } catch (e: AssertionError) {}
             
-            logger.debug("Performing pinch gesture (zoomIn=$zoomIn) on tag: $testTag")
+            logger.debugStep("Performing pinch gesture (zoomIn=$zoomIn) on tag: $testTag")
             interaction
                 .performTouchInput {
                     val start0 = center + Offset(-width / 4f, -height / 4f)
@@ -308,7 +317,7 @@ fun ComposeRuleScope.pinchToZoom(testTag: String, zoomIn: Boolean = true, useUnm
                 }
         }
     }
-    logger.debug("pinchToZoom completed for tag: $testTag")
+    logger.debugStep("pinchToZoom completed for tag: $testTag")
 }
 
 /**
@@ -324,20 +333,20 @@ fun ComposeRuleScope.pinchToZoom(testTag: String, zoomIn: Boolean = true, useUnm
  * @throws AssertionError if the node is not found or gesture fails.
  */
 fun ComposeRuleScope.clickAtOffset(testTag: String, xPercentage: Float, yPercentage: Float, useUnmergedTree: Boolean = false) {
-    logger.info("Starting clickAtOffset: testTag=$testTag, offset=($xPercentage, $yPercentage), useUnmergedTree=$useUnmergedTree")
+    logger.infoStep("Starting clickAtOffset: testTag=$testTag, offset=($xPercentage, $yPercentage), useUnmergedTree=$useUnmergedTree")
     runRobustly("Click at offset ($xPercentage, $yPercentage) on tag: $testTag", testTag) {
         val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
         try {
-            logger.debug("Attempting to scroll to tag: $testTag")
+            logger.debugStep("Attempting to scroll to tag: $testTag")
             interaction.performScrollTo()
-        } catch (e: AssertionError) {}
+        } catch (_: AssertionError) {}
         
-        logger.debug("Performing click at offset ($xPercentage, $yPercentage) on tag: $testTag")
+        logger.debugStep("Performing click at offset ($xPercentage, $yPercentage) on tag: $testTag")
         interaction.performTouchInput {
             click(Offset(width * xPercentage, height * yPercentage))
         }
     }
-    logger.debug("clickAtOffset completed for tag: $testTag")
+    logger.debugStep("clickAtOffset completed for tag: $testTag")
 }
 
 /**
@@ -359,7 +368,7 @@ fun ComposeRuleScope.rotate(
     durationMillis: Long = 500L,
     useUnmergedTree: Boolean = false,
 ) {
-    logger.info("Starting rotate: testTag=$testTag, degrees=$degrees, duration=$durationMillis")
+    logger.infoStep("Starting rotate: testTag=$testTag, degrees=$degrees, duration=$durationMillis")
     runRobustly("Rotate $degrees degrees on tag: $testTag", testTag) {
         val interaction = composeRule.onNodeWithTag(testTag, useUnmergedTree)
         try {
@@ -397,7 +406,7 @@ fun ComposeRuleScope.rotate(
             up(1)
         }
     }
-    logger.debug("rotate completed for tag: $testTag")
+    logger.debugStep("rotate completed for tag: $testTag")
 }
 
 /**
@@ -422,7 +431,7 @@ fun ComposeRuleScope.multiFingerSwipe(
     durationMillis: Long = 300L,
     useUnmergedTree: Boolean = false,
 ) {
-    logger.info("Starting multiFingerSwipe: testTag=$testTag, fingers=$fingers, direction=$direction")
+    logger.infoStep("Starting multiFingerSwipe: testTag=$testTag, fingers=$fingers, direction=$direction")
     require(fingers in (2..4)) { "multiFingerSwipe supports 2 to 4 fingers." }
     
     runRobustly("$fingers-finger swipe $direction on tag: $testTag", testTag) {
@@ -438,7 +447,7 @@ fun ComposeRuleScope.multiFingerSwipe(
             val spread = 20f // pixels between fingers
             
             for (i in 0 until fingers) {
-                val fingerOffset = (i - (fingers - 1) / 2f) * spread
+                val fingerOffset = (i - ((fingers - 1) / 2f)) * spread
                 val start = when (direction) {
                     Direction.UP -> Offset(center.x + fingerOffset, bottom - 10f)
                     Direction.DOWN -> Offset(center.x + fingerOffset, top + 10f)
@@ -464,7 +473,7 @@ fun ComposeRuleScope.multiFingerSwipe(
                 val fraction = step.toFloat() / steps
                 startOffsets.forEachIndexed { index, start ->
                     val end = endOffsets[index]
-                    moveTo(index, start + (end - start) * fraction)
+                    moveTo(index, start + ((end - start) * fraction))
                 }
                 advanceEventTime(16)
             }
@@ -475,6 +484,6 @@ fun ComposeRuleScope.multiFingerSwipe(
             }
         }
     }
-    logger.debug("multiFingerSwipe completed for tag: $testTag")
+    logger.debugStep("multiFingerSwipe completed for tag: $testTag")
 }
 

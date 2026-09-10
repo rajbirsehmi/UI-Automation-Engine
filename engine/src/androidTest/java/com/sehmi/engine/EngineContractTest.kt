@@ -78,4 +78,44 @@ class EngineContractTest : ComposeRuleScope {
 
         multiFingerSwipe("swipe_box", fingers = 3, direction = Direction.UP)
     }
+
+    @Test
+    fun testClickAtOffsetBoundaries() {
+        composeRule.setContent {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clickable { }
+                    .testTag("box")
+            )
+        }
+
+        // Test corners and center
+        clickAtOffset("box", 0f, 0f)
+        clickAtOffset("box", 1f, 1f)
+        clickAtOffset("box", 0.5f, 0.5f)
+    }
+
+    @Test
+    fun testSwipeUntilVisibleFailure() {
+        composeRule.setContent {
+            Box(Modifier.size(100.dp).testTag("root"))
+        }
+
+        assertThrows(AssertionError::class.java) {
+            swipeUntilVisible("never_appearing_tag", Direction.UP, maxSwipes = 2)
+        }
+    }
+
+    @Test
+    fun testDragAndDropSafety() {
+        composeRule.setContent {
+            Column {
+                Box(Modifier.size(50.dp).testTag("source"))
+                Box(Modifier.size(50.dp).testTag("target"))
+            }
+        }
+
+        dragAndDrop("source", "target")
+    }
 }

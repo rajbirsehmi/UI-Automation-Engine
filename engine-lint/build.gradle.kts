@@ -41,7 +41,7 @@ configure<PublishingExtension> {
             from(components["java"])
             groupId = "com.github.rajbirsehmi.UI-Engine"
             artifactId = "engine-lint"
-            version = "0.2.5-alpha"
+            version = "0.3.0-alpha"
         }
     }
 }

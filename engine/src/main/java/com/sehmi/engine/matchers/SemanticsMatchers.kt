@@ -8,7 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.printToLog
 import com.sehmi.engine.core.ComposeRuleScope
-import com.sehmi.engine.utils.runRobustly
+import com.sehmi.engine.utils.*
 
 /**
  * A collection of custom [SemanticsMatcher] implementations for advanced UI matching.
@@ -81,7 +81,8 @@ internal fun ComposeRuleScope.printUnmergedTree(testTag: String? = null) {
     val tag = "ComposeAutomation"
     try {
         if (testTag != null) {
-            composeRule.onNodeWithTag(testTag, useUnmergedTree = true).printToLog(tag)
+            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree = true)
+            node.printToLog(tag)
         } else {
             composeRule.onRoot(useUnmergedTree = true).printToLog(tag)
         }

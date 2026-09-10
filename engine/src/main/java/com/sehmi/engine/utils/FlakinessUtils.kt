@@ -28,29 +28,33 @@ private val logger: Logger = LogManager.getLogger("FlakinessUtils")
 internal fun <T> ComposeRuleScope.waitUntil(
     timeoutMillis: Long = UiEngine.config.defaultTimeoutMillis,
     pollIntervalMillis: Long = UiEngine.config.pollIntervalMillis,
-    action: () -> T
+    action: () -> T,
 ): T {
-    logger.info("Starting robust waitUntil: timeoutMillis=$timeoutMillis")
+    logger.debugStep("Starting robust waitUntil: timeoutMillis=$timeoutMillis")
     val startTime = System.currentTimeMillis()
     var lastError: Throwable? = null
     var attempt = 0
 
-    while (System.currentTimeMillis() - startTime < timeoutMillis) {
+    // Use a smaller internal poll step for better responsiveness, 
+    // but cap it at the requested pollIntervalMillis.
+    val internalStep = minOf(50L, pollIntervalMillis)
+
+    while ((System.currentTimeMillis() - startTime) < timeoutMillis) {
         attempt++
         try {
-            logger.debug("Executing waitUntil action (attempt $attempt)")
+            logger.debugStep("Executing waitUntil action (attempt $attempt)")
             val result = action()
-            logger.debug("waitUntil action succeeded on attempt $attempt")
+            logger.debugStep("waitUntil action succeeded on attempt $attempt")
             return result
         } catch (e: Throwable) {
             lastError = e
-            logger.debug("waitUntil attempt $attempt failed: ${e.message}. Syncing UI and retrying...")
+            logger.debugStep("waitUntil attempt $attempt failed: ${e.message}. Syncing UI and retrying...")
             
-            // Advance the virtual clock and wait for recomposition
+            // Sync UI state
             composeRule.waitForIdle()
             
-            // Real-world pause to avoid CPU hammering
-            Thread.sleep(pollIntervalMillis)
+            // Responsive sleep: check the clock frequently to avoid over-sleeping
+            Thread.sleep(internalStep)
         }
     }
 
@@ -65,11 +69,11 @@ internal fun <T> ComposeRuleScope.waitUntil(
 internal fun <T> waitUntil(
     timeoutMillis: Long = UiEngine.config.defaultTimeoutMillis,
     pollIntervalMillis: Long = UiEngine.config.pollIntervalMillis,
-    action: () -> T
+    action: () -> T,
 ): T {
     val startTime = System.currentTimeMillis()
     var lastError: Throwable? = null
-    while (System.currentTimeMillis() - startTime < timeoutMillis) {
+    while ((System.currentTimeMillis() - startTime) < timeoutMillis) {
         try {
             return action()
         } catch (e: Throwable) {
@@ -107,17 +111,30 @@ internal fun <T> ComposeRuleScope.runRobustly(
     tag: String? = null,
     block: ComposeRuleScope.() -> T
 ): T {
-    logger.info("Starting runRobustly: description='{}', tag={}", description, tag ?: "N/A")
+    val isNested = UiEngine.inRobustContext
+    if (!isNested) {
+        logger.infoStep("Starting runRobustly: description='$description', tag=${tag ?: "N/A"}")
+        UiEngine.inRobustContext = true
+    }
+    
     return try {
-        logger.debug("Waiting for Compose UI to be idle")
-        composeRule.waitForIdle()
-        logger.debug("Executing robust action block")
+        if (!isNested) {
+            logger.debugStep("Waiting for Compose UI to be idle")
+            composeRule.waitForIdle()
+        }
+        
         val result = this.block()
-        logger.debug("Robust action completed successfully: $description")
+        
+        if (!isNested) {
+            logger.debugStep("Robust action completed successfully: $description")
+        }
         result
     } catch (e: Throwable) {
+        // If nested, we don't capture diagnostics yet, we let the top-most block handle it
+        if (isNested) throw e
+
         val timestamp = System.currentTimeMillis()
-        val failureName = "FAILURE_${timestamp}"
+        val failureName = "FAILURE_$timestamp"
         
         logger.error("Robust action failed: $description. Error: ${e.message}")
         Log.e("ComposeAutomation", "Robust action failed: $description. Capturing diagnostics...")
@@ -125,15 +142,14 @@ internal fun <T> ComposeRuleScope.runRobustly(
         // Capture Diagnostics
         try {
             if (UiEngine.config.autoDumpSemantics) {
-                logger.debug("Capturing diagnostics: printUnmergedTree")
+                logger.debugStep("Capturing diagnostics: printUnmergedTree")
                 printUnmergedTree(tag)
             }
             if (UiEngine.config.autoCaptureScreenshots) {
-                logger.debug("Capturing diagnostics: takeScreenshot({})", failureName)
+                logger.debugStep("Capturing diagnostics: takeScreenshot({})", failureName)
                 takeScreenshot(failureName)
             }
         } catch (diagError: Throwable) {
-            logger.error("Failed to capture diagnostics: ${diagError.message}")
             Log.e("ComposeAutomation", "Failed to capture diagnostics: ${diagError.message}")
         }
 
@@ -146,7 +162,10 @@ internal fun <T> ComposeRuleScope.runRobustly(
         
         throw AssertionError(enrichedMessage, e)
     } finally {
-        logger.debug("runRobustly finished for: $description")
+        if (!isNested) {
+            UiEngine.inRobustContext = false
+            logger.debugStep("runRobustly finished for: $description")
+        }
     }
 }
 

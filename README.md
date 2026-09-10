@@ -132,6 +132,9 @@ DEBUG GestureActions - Waiting for tag to be displayed and enabled
 DEBUG GestureActions - Performing semantics click on tag: login_button
 ```
 
+> [!TIP]
+> You can disable these verbose step-by-step logs by setting `verboseLogging = false` in the `UiEngine.configure()` block.
+
 ---
 
 ## 🕒 Advanced Time Control
@@ -192,6 +195,24 @@ class InjectedRobot : ComposeRuleScope {
 
 ---
 
+## ⚙️ Global Configuration
+
+You can customize the engine's behavior (timeouts, logging, diagnostics) globally by calling `UiEngine.configure()`. This is typically done in a custom `TestRunner` or a `@BeforeClass` method.
+
+```kotlin
+UiEngine.configure(
+    UiEngine.Configuration(
+        defaultTimeoutMillis = 10_000L, // 10 seconds for robust actions
+        pollIntervalMillis = 100L,      // Interval between retries
+        verboseLogging = false,         // Cleaner Logcat for passing tests
+        autoCaptureScreenshots = true,  // Capture screenshot on failure
+        autoDumpSemantics = true        // Dump semantics tree on failure
+    )
+)
+```
+
+---
+
 ## 🚫 Static Analysis (Lint)
 
 The `:engine-lint` module ensures your team doesn't regress into flaky habits. 
@@ -225,7 +246,7 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "0.2.5-alpha"
+engine = "0.3.0-alpha"
 
 [libraries]
 uiengine = { group = "com.github.rajbirsehmi.UI-Engine", name = "robot-testing-engine", version.ref = "engine" }
