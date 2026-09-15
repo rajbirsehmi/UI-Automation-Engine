@@ -58,7 +58,6 @@ android {
     publishing {
         multipleVariants("engine") {
             allVariants()
-            withJavadocJar()
             withSourcesJar()
         }
     }
@@ -77,9 +76,7 @@ android {
 
 dokka {
     dokkaSourceSets.configureEach {
-        if (name != "standardRelease") {
-            suppress.set(true)
-        }
+        suppress.set(name != "standardRelease")
     }
 }
 
