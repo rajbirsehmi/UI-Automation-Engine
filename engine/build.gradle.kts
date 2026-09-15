@@ -1,3 +1,5 @@
+import org.jetbrains.dokka.gradle.DokkaExtension
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.compiler)
@@ -76,7 +78,12 @@ android {
 
 dokka {
     dokkaSourceSets.configureEach {
-        suppress.set(name != "standardRelease")
+        if (name == "standardRelease") {
+            suppress.set(false)
+        } else {
+            suppress.set(true)
+            sourceRoots.setFrom()
+        }
     }
 }
 
