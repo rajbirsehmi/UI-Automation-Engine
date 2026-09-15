@@ -22,9 +22,9 @@ import org.junit.runner.RunWith
 class RobustnessContractTest : ComposeRuleScope {
 
     @get:Rule
-    val rule = UiEngine.createRule()
+    val rule = UiTestEngine.createRule()
 
-    override val composeRule get() = rule
+    override val uiTestEngineRule get() = rule
 
     @Test
     fun testWaitUntilSucceedsAfterRetry() {
@@ -86,15 +86,15 @@ class RobustnessContractTest : ComposeRuleScope {
     @Test
     fun testConfigurationTimeoutIsRespected() {
         val customTimeout = 1000L
-        UiEngine.configure(
-            UiEngine.Configuration(
+        UiTestEngine.configure(
+            UiTestEngine.Configuration(
                 defaultTimeoutMillis = customTimeout,
                 autoCaptureScreenshots = false,
                 autoDumpSemantics = false,
             )
         )
 
-        assertEquals(customTimeout, UiEngine.config.defaultTimeoutMillis)
+        assertEquals(customTimeout, UiTestEngine.config.defaultTimeoutMillis)
 
         val startTime = System.currentTimeMillis()
         assertThrows(IllegalStateException::class.java) {
@@ -110,7 +110,7 @@ class RobustnessContractTest : ComposeRuleScope {
         assertTrue("Duration was $duration", duration < (customTimeout + 2000L))
         
         // Reset configuration to default
-        UiEngine.configure(UiEngine.Configuration())
+        UiTestEngine.configure(UiTestEngine.Configuration())
     }
 
     @Test

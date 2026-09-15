@@ -9,7 +9,7 @@ class EngineIssueRegistry : IssueRegistry() {
     override val issues: List<Issue>
         get() = listOf(
             DirectComposeTestUsageDetector.ISSUE,
-            UiEngineSetupDetector.ISSUE
+            UiTestEngineSetupDetector.ISSUE
         )
 
     override val api: Int

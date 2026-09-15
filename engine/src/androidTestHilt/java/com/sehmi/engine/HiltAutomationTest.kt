@@ -31,7 +31,7 @@ interface MyTestEntryPoint {
 }
 
 class HiltMockRobot : ComposeRuleScope {
-    private val entryPoint: MyTestEntryPoint by UiEngine.getTestEntryPoint()
+    private val entryPoint: MyTestEntryPoint by UiTestEngine.getTestEntryPoint()
 
     fun verifyDependency() {
         assertEquals("Hilt Dependency Workings", entryPoint.getDependency().message)
@@ -50,7 +50,7 @@ class HiltAutomationTest {
     val hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
-    val rule = UiEngine.createHiltRule(ComponentActivity::class.java)
+    val rule = UiTestEngine.createHiltRule(ComponentActivity::class.java)
 
     @Test
     fun testHiltRuleAndEntryPoint() {
@@ -60,7 +60,7 @@ class HiltAutomationTest {
             Text("Hilt Test", modifier = Modifier.testTag("hilt_text"))
         }
 
-        UiEngine.withRobot(HiltMockRobot()) {
+        UiTestEngine.withRobot(HiltMockRobot()) {
             verifyDependency()
             checkUi()
         }

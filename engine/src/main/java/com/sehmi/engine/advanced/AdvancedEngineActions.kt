@@ -1,6 +1,7 @@
 package com.sehmi.engine.advanced
 
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.AccessibilityAction
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
@@ -27,11 +28,11 @@ private val logger: Logger = LogManager.getLogger("AdvancedEngineActions")
  * and raw Compose semantics actions. It is intended for complex scenarios that 
  * cannot be fulfilled by the standard robust action pipeline.
  *
- * @property composeRule The [ComposeTestRule] used for interactions.
+ * @property uiTestEngineRule The [ComposeTestRule] used for interactions.
  * @property targetTag The default test tag to operate on, if provided.
  */
 class AdvancedActionBuilder(
-    private val composeRule: ComposeTestRule,
+    private val uiTestEngineRule: ComposeTestRule,
     private val targetTag: String?,
 ) {
 
@@ -50,7 +51,7 @@ class AdvancedActionBuilder(
     fun gesture(tag: String? = targetTag, block: TouchInjectionScope.() -> Unit) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in gesture call.")
         logger.debugStep("Executing advanced gesture on tag: $tagToUse")
-        composeRule.onNodeWithTag(tagToUse).performTouchInput(block)
+        uiTestEngineRule.onNodeWithTag(tagToUse).performTouchInput(block)
     }
 
     /**
@@ -69,7 +70,7 @@ class AdvancedActionBuilder(
     fun keySequence(keys: List<Key>, tag: String? = targetTag) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in keySequence call.")
         logger.debugStep("Executing advanced key sequence {} on tag: {}", keys, tagToUse)
-        composeRule.onNodeWithTag(tagToUse).performKeyInput {
+        uiTestEngineRule.onNodeWithTag(tagToUse).performKeyInput {
             keys.forEach { 
                 keyDown(it)
                 keyUp(it)
@@ -91,10 +92,10 @@ class AdvancedActionBuilder(
     fun <T : Any> semantics(key: SemanticsPropertyKey<T>, tag: String? = targetTag) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in semantics call.")
         logger.debugStep("Executing advanced semantics action {} on tag: {}", key, tagToUse)
-        val interaction = composeRule.onNodeWithTag(tagToUse)
+        val interaction = uiTestEngineRule.onNodeWithTag(tagToUse)
         try {
             // Raw execution of the semantics action.
-            interaction.performSemanticsAction(key as SemanticsPropertyKey<androidx.compose.ui.semantics.AccessibilityAction<Function<Boolean>>>) { }
+            interaction.performSemanticsAction(key as SemanticsPropertyKey<AccessibilityAction<Function<Boolean>>>) { }
         } catch (e: Exception) {
             throw IllegalArgumentException("The provided SemanticsPropertyKey must be an AccessibilityAction to be executed.", e)
         }
@@ -114,7 +115,7 @@ class AdvancedActionBuilder(
     fun rawNodeInteraction(tag: String? = targetTag, block: SemanticsNodeInteraction.() -> Unit) {
         val tagToUse = tag ?: throw IllegalArgumentException("testTag must be provided either in executeAdvancedAction or explicitly in rawNodeInteraction call.")
         logger.debugStep("Executing raw node interaction on tag: $tagToUse")
-        composeRule.onNodeWithTag(tagToUse).block()
+        uiTestEngineRule.onNodeWithTag(tagToUse).block()
     }
 }
 
@@ -141,7 +142,7 @@ fun ComposeRuleScope.executeAdvancedAction(
     logger.infoStep("Starting executeAdvancedAction: testTag=${testTag ?: "N/A"}, timeoutMillis=$timeoutMillis")
     try {
         logger.debugStep("Waiting for Compose UI to idle")
-        composeRule.waitForIdle()
+        uiTestEngineRule.waitForIdle()
 
         // Verify visibility if tag is provided
         if (testTag != null) {
@@ -152,12 +153,12 @@ fun ComposeRuleScope.executeAdvancedAction(
         // Wrap execution in flakiness retry logic
         logger.debugStep("Executing advanced action block within waitUntil loop")
         waitUntil(timeoutMillis = timeoutMillis) {
-            val builder = AdvancedActionBuilder(composeRule, testTag)
+            val builder = AdvancedActionBuilder(uiTestEngineRule, testTag)
             builder.block()
         }
 
         logger.debugStep("Action block finished, waiting for UI to idle")
-        composeRule.waitForIdle()
+        uiTestEngineRule.waitForIdle()
     } catch (e: Throwable) {
         // Resilience: Capture diagnostics before rethrowing as AssertionError
         logger.debugStep("Advanced action failed. Capturing diagnostics...")
@@ -172,4 +173,3 @@ fun ComposeRuleScope.executeAdvancedAction(
     }
     logger.debugStep("executeAdvancedAction completed")
 }
-

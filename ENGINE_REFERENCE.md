@@ -21,7 +21,7 @@ This document provides an exhaustive reference for the `:engine` module, detaili
 
 ## Global Configuration
 
-### `UiEngine.configure(Configuration)`
+### `UiTestEngine.configure(Configuration)`
 Allows global customization of the engine's behavior. Call this in a `@BeforeClass` or global test initializer.
 
 #### Example Usage:
@@ -29,8 +29,8 @@ Allows global customization of the engine's behavior. Call this in a `@BeforeCla
 @BeforeClass
 @JvmStatic
 fun setupEngine() {
-    UiEngine.configure(
-        UiEngine.Configuration(
+    UiTestEngine.configure(
+        UiTestEngine.Configuration(
             defaultTimeoutMillis = 8000L,
             pollIntervalMillis = 150L,
             verboseLogging = false,
@@ -53,34 +53,34 @@ fun setupEngine() {
 
 ## Core Architecture
 
-### `UiEngine` (Singleton)
+### `UiTestEngine` (Singleton)
 The central manager for the `ComposeTestRule`. Use this to avoid passing rules to every robot constructor.
 *   **`setComposeRule(rule)`**: Manually sets the rule (for custom rule setups).
 *   **`clearComposeRule()`**: Clears the rule.
 *   **`withRobot(robot) { /* ... */ }`**: DSL entry point using the global rule.
 
-### `UiEngine.createRule()` (Factory)
+### `UiTestEngine.createRule()` (Factory)
 The easiest way to initialize the engine for standard tests. Returns a wrapped `ComposeContentTestRule` that handles all lifecycle registration.
-*   **Usage**: `@get:Rule val rule = UiEngine.createRule()`
+*   **Usage**: `@get:Rule val rule = UiTestEngine.createRule()`
 
-### `UiEngineRule` (JUnit Rule)
+### `UiTestEngineRule` (JUnit Rule)
 A decorator rule for existing `ComposeTestRule` instances.
-*   **Usage**: `@get:Rule val engineRule = UiEngineRule(composeRule)`
+*   **Usage**: `@get:Rule val engineRule = UiTestEngineRule(composeRule)`
 *   **Benefit**: Ensures that `setComposeRule` and `clearComposeRule` are called at the correct times.
 
 ### `ComposeRuleScope` (Interface)
 The foundation of the engine. Robots must implement this to gain access to all robust extension methods.
-*   **Property**: `composeRule: ComposeTestRule`. Defaults to `UiEngine.composeRule`.
+*   **Property**: `uiTestEngineRule: ComposeTestRule`. Defaults to `UiTestEngine.uiTestEngineRule`.
 
 ### `withRobot` (Extension)
 The DSL entry point for executing blocks of code within a robot's scope.
 *   **Usage**:
     ```kotlin
     // Option A: Centralized
-    UiEngine.withRobot(MyRobot()) { /* robot logic */ }
+    UiTestEngine.withRobot(MyRobot()) { /* robot logic */ }
 
     // Option B: Standard
-    composeRule.withRobot(MyRobot()) { /* robot logic */ }
+    uiTestEngineRule.withRobot(MyRobot()) { /* robot logic */ }
     ```
 
 ---
@@ -220,21 +220,21 @@ executeAdvancedAction(testTag = "canvas") {
 
 ## Hilt Integration
 
-### `UiEngine.createHiltRule`
+### `UiTestEngine.createHiltRule`
 Integrates Hilt and Compose correctly to ensure injection is ready before `setContent` and that the engine is registered.
 ```kotlin
 @get:Rule(order = 0)
 val hiltRule = HiltAndroidRule(this)
 
 @get:Rule(order = 1)
-val rule = UiEngine.createHiltRule(MainActivity::class.java)
+val rule = UiTestEngine.createHiltRule(MainActivity::class.java)
 ```
 
-### `UiEngine.getTestEntryPoint()`
+### `UiTestEngine.getTestEntryPoint()`
 Provides access to Hilt-injected singletons (like repositories or managers) inside a Robot via a property delegate.
 ```kotlin
 class MyRobot : ComposeRuleScope {
-    private val repo: MyRepository by UiEngine.getTestEntryPoint()
+    private val repo: MyRepository by UiTestEngine.getTestEntryPoint()
     
     fun performAction() {
         repo.doSomething()
@@ -279,7 +279,7 @@ The `:engine-lint` module enforces the correct usage of the framework and preven
 **Description**: Prevents direct usage of `androidx.compose.ui.test` APIs (like `performClick`, `onNodeWithTag`). 
 **Rationale**: Direct APIs bypass the engine's robustness pipeline (retries, scrolling, idle-sync).
 
-### `MissingUiEngineSetup`
+### `MissingUiTestEngineSetup`
 **Severity**: Error
-**Description**: Ensures that `UiEngine.withRobot` is only used when the `ComposeTestRule` is properly registered.
-**Solution**: Use `UiEngine.createRule()` or `UiEngine.createHiltRule()` to initialize your test.
+**Description**: Ensures that `UiTestEngine.withRobot` is only used when the `ComposeTestRule` is properly registered.
+**Solution**: Use `UiTestEngine.createRule()` or `UiTestEngine.createHiltRule()` to initialize your test.

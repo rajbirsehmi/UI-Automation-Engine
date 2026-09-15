@@ -32,7 +32,7 @@ enum class Orientation {
  */
 fun ComposeRuleScope.pressBack() {
     logger.infoStep("Starting pressBack")
-    composeRule.waitForIdle()
+    uiTestEngineRule.waitForIdle()
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     logger.debugStep("Performing system back button press")
     device.pressBack()
@@ -46,7 +46,7 @@ fun ComposeRuleScope.pressBack() {
  */
 fun ComposeRuleScope.pressHome() {
     logger.infoStep("Starting pressHome")
-    composeRule.waitForIdle()
+    uiTestEngineRule.waitForIdle()
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     logger.debugStep("Performing system home button press")
     device.pressHome()
@@ -69,7 +69,7 @@ fun ComposeRuleScope.rotateScreen(orientation: Orientation) {
         Orientation.LANDSCAPE -> device.setOrientationLeft()
     }
     logger.debugStep("Waiting for Compose UI to idle after rotation")
-    composeRule.waitForIdle()
+    uiTestEngineRule.waitForIdle()
     logger.debugStep("rotateScreen completed")
 }
 
@@ -92,7 +92,7 @@ fun ComposeRuleScope.handlePermissionDialog(allow: Boolean) {
     if (permissionButton.exists()) {
         logger.debugStep("Permission button found, clicking")
         permissionButton.click()
-        composeRule.waitForIdle()
+        uiTestEngineRule.waitForIdle()
         logger.debugStep("Permission dialog handled and UI idle")
     } else {
         logger.debugStep("Permission button not found")
@@ -151,7 +151,7 @@ fun ComposeRuleScope.openNotificationShade() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         logger.debugStep("Performing system notification shade expansion")
         device.openNotification()
-        composeRule.waitForIdle()
+        uiTestEngineRule.waitForIdle()
     }
     logger.debugStep("openNotificationShade completed")
 }
@@ -185,7 +185,7 @@ fun ComposeRuleScope.clickNotification(text: String, timeoutMillis: Long = 5000L
         if (notification != null) {
             logger.debugStep("Notification found, clicking")
             notification.click()
-            composeRule.waitForIdle()
+            uiTestEngineRule.waitForIdle()
         } else {
             throw AssertionError("Notification with text '$text' not found after ${timeoutMillis}ms")
         }
@@ -221,7 +221,7 @@ fun ComposeRuleScope.toggleQuickSetting(settingName: String) {
         if (tile != null) {
             logger.debugStep("Quick setting tile found, clicking")
             tile.click()
-            composeRule.waitForIdle()
+            uiTestEngineRule.waitForIdle()
             // Close quick settings
             device.pressBack()
         } else {
@@ -230,4 +230,3 @@ fun ComposeRuleScope.toggleQuickSetting(settingName: String) {
     }
     logger.debugStep("toggleQuickSetting completed for setting: $settingName")
 }
-

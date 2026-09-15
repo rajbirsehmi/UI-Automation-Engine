@@ -17,18 +17,18 @@ class MockRobot : ComposeRuleScope {
 }
 
 @RunWith(AndroidJUnit4::class)
-class UiEngineTest {
+class UiTestEngineTest {
 
     @get:Rule
-    val rule = UiEngine.createRule()
+    val rule = UiTestEngine.createRule()
 
     @Test
-    fun testUiEngineWithRobot() {
+    fun testUiTestEngineWithRobot() {
         rule.setContent {
             Text("Hello", modifier = Modifier.testTag("test_tag"))
         }
 
-        UiEngine.withRobot(MockRobot()) {
+        UiTestEngine.withRobot(MockRobot()) {
             checkText()
         }
     }

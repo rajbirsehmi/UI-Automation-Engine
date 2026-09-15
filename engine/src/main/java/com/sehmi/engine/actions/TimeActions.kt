@@ -20,7 +20,7 @@ fun ComposeRuleScope.advanceTime(millis: Long) {
     logger.infoStep("Starting advanceTime: millis=$millis")
     runRobustly("Advance time by $millis ms") {
         logger.debugStep("Advancing clock by $millis ms")
-        composeRule.mainClock.advanceTimeBy(millis)
+        uiTestEngineRule.mainClock.advanceTimeBy(millis)
     }
     logger.debugStep("advanceTime completed")
 }
@@ -35,7 +35,7 @@ fun ComposeRuleScope.advanceTimeByFrame() {
     logger.infoStep("Starting advanceTimeByFrame")
     runRobustly("Advance time by one frame") {
         logger.debugStep("Advancing clock by one frame")
-        composeRule.mainClock.advanceTimeByFrame()
+        uiTestEngineRule.mainClock.advanceTimeByFrame()
     }
     logger.debugStep("advanceTimeByFrame completed")
 }
@@ -54,7 +54,7 @@ fun ComposeRuleScope.advanceTimeUntil(timeoutMillis: Long = 1000L, condition: ()
     logger.infoStep("Starting advanceTimeUntil: timeoutMillis=$timeoutMillis")
     runRobustly("Advance time until condition met") {
         logger.debugStep("Advancing clock until condition is met (timeout=$timeoutMillis)")
-        composeRule.mainClock.advanceTimeUntil(timeoutMillis, condition)
+        uiTestEngineRule.mainClock.advanceTimeUntil(timeoutMillis, condition)
     }
     logger.debugStep("advanceTimeUntil completed")
 }
@@ -70,7 +70,7 @@ fun ComposeRuleScope.advanceTimeUntil(timeoutMillis: Long = 1000L, condition: ()
  */
 fun ComposeRuleScope.setAutoAdvance(enabled: Boolean) {
     logger.infoStep("Starting setAutoAdvance: enabled=$enabled")
-    composeRule.mainClock.autoAdvance = enabled
+    uiTestEngineRule.mainClock.autoAdvance = enabled
     logger.debugStep("setAutoAdvance completed")
 }
 
@@ -84,15 +84,14 @@ fun ComposeRuleScope.setAutoAdvance(enabled: Boolean) {
  */
 fun ComposeRuleScope.withPausedClock(block: () -> Unit) {
     logger.infoStep("Starting withPausedClock")
-    val wasAutoAdvance = composeRule.mainClock.autoAdvance
+    val wasAutoAdvance = uiTestEngineRule.mainClock.autoAdvance
     logger.debugStep("Pausing clock (previous autoAdvance state: $wasAutoAdvance)")
-    composeRule.mainClock.autoAdvance = false
+    uiTestEngineRule.mainClock.autoAdvance = false
     try {
         block()
     } finally {
         logger.debugStep("Restoring clock autoAdvance state to: $wasAutoAdvance")
-        composeRule.mainClock.autoAdvance = wasAutoAdvance
+        uiTestEngineRule.mainClock.autoAdvance = wasAutoAdvance
         logger.debugStep("withPausedClock completed")
     }
 }
-

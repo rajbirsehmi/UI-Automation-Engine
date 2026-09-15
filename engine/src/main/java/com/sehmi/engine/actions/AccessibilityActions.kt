@@ -32,7 +32,7 @@ fun ComposeRuleScope.navigateByAccessibility(direction: Direction) {
             device.pressKeyCode(KeyEvent.KEYCODE_TAB, KeyEvent.META_SHIFT_ON)
         }
         Thread.sleep(100) // Small delay for system focus manager to catch up
-        composeRule.waitForIdle()
+        uiTestEngineRule.waitForIdle()
     }
     logger.debugStep("navigateByAccessibility completed")
 }
@@ -54,7 +54,7 @@ fun ComposeRuleScope.assertFocusOrder(expectedTags: List<String>) {
             logger.debugStep("Verifying focus for tag at index {}: {}", index, tag)
             // Ensure focus is on the element
             requestFocus(tag)
-            composeRule.onNodeWithTag(tag).assert(isFocused())
+            uiTestEngineRule.onNodeWithTag(tag).assert(isFocused())
         }
     }
     logger.debugStep("assertFocusOrder completed")
@@ -74,7 +74,7 @@ fun ComposeRuleScope.assertFocusOrder(expectedTags: List<String>) {
 fun ComposeRuleScope.assertInteractiveNodesHaveLabels() {
     logger.infoStep("Starting assertInteractiveNodesHaveLabels")
     runRobustly("Assert interactive nodes have labels") {
-        val interactiveNodes = composeRule.onAllNodes(hasClickAction())
+        val interactiveNodes = uiTestEngineRule.onAllNodes(hasClickAction())
         val nodesCount = interactiveNodes.fetchSemanticsNodes().size
         logger.debugStep("Found $nodesCount interactive nodes to audit")
         
