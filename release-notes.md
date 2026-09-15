@@ -1,6 +1,9 @@
-# 🚀 Release Notes - v0.3.0-beta01
+# 🚀 Release Notes - v0.3.0-beta02
 
-## [0.3.0-beta01] - 2026-11-06
+## [0.3.0-beta02] - 2026-11-07
+
+> [!NOTE]
+> This is a maintenance release to resolve Dokka documentation generation issues in multi-variant Android projects by downgrading to Dokka 1.9.20. This restores build stability on CI/JitPack while we investigate long-term K2 compatibility for documentation. No functional code changes were included.
 
 This major release marks the official transition to the **UI Automation Engine**. We have overhauled the core identity of the framework to provide better clarity for the public community, while simultaneously delivering massive performance gains and high-precision automation tools.
 
@@ -53,7 +56,7 @@ You can now fully control the verbosity of the engine's Logcat output.
 Update your `gradle/libs.versions.toml`:
 ```toml
 [versions]
-engine = "0.3.0-beta01"
+engine = "0.3.0-beta02"
 
 [libraries]
 uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "robot-testing-engine", version.ref = "engine" }

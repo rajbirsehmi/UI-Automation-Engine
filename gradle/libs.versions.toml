@@ -1,5 +1,5 @@
 [versions]
-engine = "0.3.0-beta01"
+engine = "0.3.0-beta02"
 agp = "9.4.0"
 composeBom = "2026.09.00"
 kotlin = "2.4.20"
@@ -11,11 +11,11 @@ lintApi = "32.4.0"
 lintChecks = "32.4.0"
 lintTests = "32.4.0"
 uiautomator = "2.4.0"
-testRunner = "1.6.2"
+testRunner = "1.7.0"
 log4j = "2.26.1"
 hilt = "2.60.1"
-ksp = "2.0.21-1.0.28"
-dokka = "2.2.0"
+ksp = "2.3.12"
+dokka = "1.9.20"
 
 [libraries]
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -29,7 +29,6 @@ androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", versi
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
-androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "testRunner" }
 lint = { module = "com.android.tools.lint:lint", version.ref = "lint" }
 lint-api = { module = "com.android.tools.lint:lint-api", version.ref = "lintApi" }
 lint-checks = { module = "com.android.tools.lint:lint-checks", version.ref = "lintChecks" }
@@ -48,4 +47,3 @@ jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin"
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-

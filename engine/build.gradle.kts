@@ -1,4 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaExtension
 
 plugins {
     alias(libs.plugins.android.library)
@@ -76,21 +75,18 @@ android {
     }
 }
 
-dokka {
-    dokkaSourceSets.configureEach {
-        if (name == "standardRelease") {
-            suppress.set(false)
-        } else {
-            suppress.set(true)
-            sourceRoots.setFrom()
+tasks.dokkaHtml.configure {
+    dokkaSourceSets {
+        named("main") {
+            noAndroidSdkLink.set(false)
         }
     }
 }
 
 // Task to generate a Dokka-based Javadoc JAR
 val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn("dokkaGeneratePublicationHtml")
-    from(layout.buildDirectory.dir("dokka/html"))
+    dependsOn(tasks.dokkaHtml)
+    from(tasks.dokkaHtml.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
 }
 
@@ -136,7 +132,7 @@ publishing {
         register<MavenPublication>("maven") {
             groupId = "com.github.rajbirsehmi.UI-Automation-Engine"
             artifactId = "robot-testing-engine"
-            version = "0.3.0-beta01"
+            version = "0.3.0-beta02"
 
             afterEvaluate {
                 from(components["engine"])
