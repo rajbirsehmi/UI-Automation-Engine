@@ -41,7 +41,7 @@ The Engine follows three core principles:
 ## 📋 Requirements
 
 > [!IMPORTANT]
-> **Java 17 Required**: The engine is built with and requires Java 17 for both the build process and the runtime environment. See [Java 17 Configuration](#6-java-17-configuration) for setup steps.
+> **Java 17 Required**: The engine is built with and requires Java 17 for both the build process and the runtime environment.
 
 - **Android SDK 30+**: Minimum supported Android API level.
 - **Jetpack Compose**: Designed specifically for Compose-based UIs.
@@ -335,7 +335,7 @@ android {
         }
     }
 }
-
+```
 ### 6. Java 17 Configuration
 Ensure your project is configured to use Java 17 in your `android` block:
 
@@ -350,7 +350,6 @@ android {
         jvmTarget = "17"
     }
 }
-```
 ```
 
 ---
