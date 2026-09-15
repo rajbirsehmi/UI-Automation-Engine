@@ -29,11 +29,11 @@ import org.junit.runner.RunWith
 class EngineContractTest : ComposeRuleScope {
 
     @get:Rule
-    override val composeRule = createComposeRule()
+    override val uiTestEngineRule = createComposeRule()
 
     @Test
     fun testAccessibilityAuditFailsOnMissingLabels() {
-        composeRule.setContent {
+        uiTestEngineRule.setContent {
             Column(Modifier.testTag("root")) {
                 Button(onClick = {}, modifier = Modifier.testTag("valid_button")) {
                     Text("Click Me")
@@ -54,7 +54,7 @@ class EngineContractTest : ComposeRuleScope {
 
     @Test
     fun testRotationGestureSafety() {
-        composeRule.setContent {
+        uiTestEngineRule.setContent {
             Box(
                 modifier = Modifier
                     .size(200.dp)
@@ -68,7 +68,7 @@ class EngineContractTest : ComposeRuleScope {
 
     @Test
     fun testMultiFingerSwipeSafety() {
-        composeRule.setContent {
+        uiTestEngineRule.setContent {
             Box(
                 modifier = Modifier
                     .size(200.dp)
@@ -81,7 +81,7 @@ class EngineContractTest : ComposeRuleScope {
 
     @Test
     fun testClickAtOffsetBoundaries() {
-        composeRule.setContent {
+        uiTestEngineRule.setContent {
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -98,7 +98,7 @@ class EngineContractTest : ComposeRuleScope {
 
     @Test
     fun testSwipeUntilVisibleFailure() {
-        composeRule.setContent {
+        uiTestEngineRule.setContent {
             Box(Modifier.size(100.dp).testTag("root"))
         }
 
@@ -109,7 +109,7 @@ class EngineContractTest : ComposeRuleScope {
 
     @Test
     fun testDragAndDropSafety() {
-        composeRule.setContent {
+        uiTestEngineRule.setContent {
             Column {
                 Box(Modifier.size(50.dp).testTag("source"))
                 Box(Modifier.size(50.dp).testTag("target"))

@@ -1,24 +1,24 @@
 package com.sehmi.engine.utils
 
-import com.sehmi.engine.UiEngine
+import com.sehmi.engine.UiTestEngine
 import org.apache.logging.log4j.Logger
 
 /**
- * Extension function to log an info message only if verbose logging is enabled in [UiEngine].
+ * Extension function to log an info message only if verbose logging is enabled in [UiTestEngine].
  */
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun Logger.infoStep(message: String) {
-    if (UiEngine.config.verboseLogging) {
+    if (UiTestEngine.config.verboseLogging) {
         info(message)
     }
 }
 
 /**
- * Extension function to log a debug message only if verbose logging is enabled in [UiEngine].
+ * Extension function to log a debug message only if verbose logging is enabled in [UiTestEngine].
  */
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun Logger.debugStep(message: String) {
-    if (UiEngine.config.verboseLogging) {
+    if (UiTestEngine.config.verboseLogging) {
         debug(message)
     }
 }
@@ -28,7 +28,7 @@ internal inline fun Logger.debugStep(message: String) {
  */
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun Logger.debugStep(message: String, vararg params: Any?) {
-    if (UiEngine.config.verboseLogging) {
+    if (UiTestEngine.config.verboseLogging) {
         debug(message, *params)
     }
 }

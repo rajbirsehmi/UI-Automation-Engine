@@ -81,10 +81,10 @@ internal fun ComposeRuleScope.printUnmergedTree(testTag: String? = null) {
     val tag = "ComposeAutomation"
     try {
         if (testTag != null) {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree = true)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree = true)
             node.printToLog(tag)
         } else {
-            composeRule.onRoot(useUnmergedTree = true).printToLog(tag)
+            uiTestEngineRule.onRoot(useUnmergedTree = true).printToLog(tag)
         }
     } catch (e: Throwable) {
         Log.e(tag, "Failed to print semantics tree: ${e.message}")

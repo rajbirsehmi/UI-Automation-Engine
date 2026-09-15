@@ -44,7 +44,7 @@ fun ComposeRuleScope.assertTagDisplayed(testTag: String, useUnmergedTree: Boolea
     logger.infoStep("Starting assertTagDisplayed: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag displayed: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsDisplayed()
             } catch (e: AssertionError) {
@@ -77,7 +77,7 @@ fun ComposeRuleScope.assertTagDoesNotExist(testTag: String, useUnmergedTree: Boo
     runRobustly("Assert tag does not exist: $testTag", testTag) {
         this.waitUntil {
             logger.debugStep("Asserting tag $testTag does not exist")
-            composeRule.onNodeWithTag(testTag, useUnmergedTree).assertDoesNotExist()
+            uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree).assertDoesNotExist()
         }
     }
     logger.debugStep("assertTagDoesNotExist completed for tag: $testTag")
@@ -98,7 +98,7 @@ fun ComposeRuleScope.assertTagIsNotDisplayed(testTag: String, useUnmergedTree: B
     runRobustly("Assert tag is not displayed: $testTag", testTag) {
         this.waitUntil {
             logger.debugStep("Asserting tag $testTag is not displayed")
-            composeRule.onNodeWithTag(testTag, useUnmergedTree).assertIsNotDisplayed()
+            uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree).assertIsNotDisplayed()
         }
     }
     logger.debugStep("assertTagIsNotDisplayed completed for tag: $testTag")
@@ -118,7 +118,7 @@ fun ComposeRuleScope.assertIsEnabled(testTag: String, useUnmergedTree: Boolean =
     logger.infoStep("Starting assertIsEnabled: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is enabled: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsEnabled()
             } catch (e: AssertionError) {
@@ -149,7 +149,7 @@ fun ComposeRuleScope.assertIsDisabled(testTag: String, useUnmergedTree: Boolean 
     logger.infoStep("Starting assertIsDisabled: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is disabled: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             val matcher = isNotEnabled()
             try {
                 node.assert(matcher)
@@ -180,7 +180,7 @@ fun ComposeRuleScope.assertIsFocused(testTag: String, useUnmergedTree: Boolean =
     logger.infoStep("Starting assertIsFocused: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is focused: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsFocused()
             } catch (e: AssertionError) {
@@ -210,7 +210,7 @@ fun ComposeRuleScope.assertIsNotFocused(testTag: String, useUnmergedTree: Boolea
     logger.infoStep("Starting assertIsNotFocused: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is not focused: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsNotFocused()
             } catch (e: AssertionError) {
@@ -240,7 +240,7 @@ fun ComposeRuleScope.assertIsSelected(testTag: String, useUnmergedTree: Boolean 
     logger.infoStep("Starting assertIsSelected: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is selected: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsSelected()
             } catch (e: AssertionError) {
@@ -270,7 +270,7 @@ fun ComposeRuleScope.assertIsNotSelected(testTag: String, useUnmergedTree: Boole
     logger.infoStep("Starting assertIsNotSelected: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is not selected: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsNotSelected()
             } catch (e: AssertionError) {
@@ -300,7 +300,7 @@ fun ComposeRuleScope.assertIsOn(testTag: String, useUnmergedTree: Boolean = fals
     logger.infoStep("Starting assertIsOn: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is ON: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsOn()
             } catch (e: AssertionError) {
@@ -330,7 +330,7 @@ fun ComposeRuleScope.assertIsOff(testTag: String, useUnmergedTree: Boolean = fal
     logger.infoStep("Starting assertIsOff: testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert tag is OFF: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertIsOff()
             } catch (e: AssertionError) {
@@ -361,7 +361,7 @@ fun ComposeRuleScope.assertTextEquals(testTag: String, expectedText: String, use
     logger.infoStep("Starting assertTextEquals: expectedText='$expectedText', testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert text equals '$expectedText' in tag: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertTextEquals(expectedText)
             } catch (e: AssertionError) {
@@ -392,7 +392,7 @@ fun ComposeRuleScope.assertTextContains(testTag: String, substring: String, useU
     logger.infoStep("Starting assertTextContains: substring='$substring', testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert text contains '$substring' in tag: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertTextContains(substring)
             } catch (e: AssertionError) {
@@ -424,7 +424,7 @@ fun ComposeRuleScope.assertValueEquals(testTag: String, expectedValue: String, u
     logger.infoStep("Starting assertValueEquals: expectedValue='$expectedValue', testTag=$testTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert value equals '$expectedValue' in tag: $testTag", testTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(testTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree)
             try {
                 node.assertValueEquals(expectedValue)
             } catch (e: AssertionError) {
@@ -456,7 +456,7 @@ fun ComposeRuleScope.assertHasChild(parentTag: String, childTag: String, useUnme
     logger.infoStep("Starting assertHasChild: parentTag=$parentTag, childTag=$childTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert parent $parentTag has child $childTag", parentTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(parentTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(parentTag, useUnmergedTree)
             val matcher = hasAnyChild(hasTestTag(childTag))
             try {
                 node.assert(matcher)
@@ -489,7 +489,7 @@ fun ComposeRuleScope.assertHasParent(childTag: String, parentTag: String, useUnm
     logger.infoStep("Starting assertHasParent: childTag=$childTag, parentTag=$parentTag, useUnmergedTree=$useUnmergedTree")
     runRobustly("Assert child $childTag has parent $parentTag", childTag) {
         this.waitUntil {
-            val node = composeRule.onNodeWithTag(childTag, useUnmergedTree)
+            val node = uiTestEngineRule.onNodeWithTag(childTag, useUnmergedTree)
             val matcher = hasParent(hasTestTag(parentTag))
             try {
                 node.assert(matcher)
@@ -506,4 +506,3 @@ fun ComposeRuleScope.assertHasParent(childTag: String, parentTag: String, useUnm
     }
     logger.debugStep("assertHasParent completed for childTag: $childTag")
 }
-

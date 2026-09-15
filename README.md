@@ -1,6 +1,6 @@
 # 🤖 UI Automation Engine
 
-[![JitPack](https://jitpack.io/v/rajbirsehmi/UI-Engine.svg)](https://jitpack.io/#rajbirsehmi/UI-Engine)
+[![JitPack](https://jitpack.io/v/rajbirsehmi/UI-Automation-Engine.svg)](https://jitpack.io/#rajbirsehmi/UI-Automation-Engine)
 [![Android](https://img.shields.io/badge/Platform-Android-brightgreen.svg?style=flat-square)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-blue.svg?style=flat-square)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-navy.svg?style=flat-square)](https://developer.android.com/jetpack/compose)
@@ -41,10 +41,10 @@ The Engine follows three core principles:
 The engine enforces the **Robot Pattern**, separating the "What" of the test from the "How" of the implementation.
 
 ### 1. The Robot (`ComposeRuleScope`)
-Robots implement the `ComposeRuleScope` to gain access to the engine's robust action suite. By default, they utilize the global rule managed by `UiEngine`, but can also accept a rule via constructor for specific needs.
+Robots implement the `ComposeRuleScope` to gain access to the engine's robust action suite. By default, they utilize the global rule managed by `UiTestEngine`, but can also accept a rule via constructor for specific needs.
 
 ```kotlin
-// Modern Robot (Using UiEngine)
+// Modern Robot (Using UiTestEngine)
 class GestureRobot : ComposeRuleScope {
     fun tapMainBox() {
         clickOnTag("gesture_box") // Automatic idle-sync & scroll
@@ -60,15 +60,15 @@ class GestureRobot : ComposeRuleScope {
 The engine provides two ways to invoke your robots.
 
 #### 🚀 Centralized Invocation (Recommended)
-This approach eliminates the need to pass the rule to every robot instance. Use `UiEngine.createRule()` to initialize your test—it automatically manages the engine's lifecycle.
+This approach eliminates the need to pass the rule to every robot instance. Use `UiTestEngine.createRule()` to initialize your test—it automatically manages the engine's lifecycle.
 
 ```kotlin
 @get:Rule
-val rule = UiEngine.createRule() // Combined rule for Compose + Engine
+val rule = UiTestEngine.createRule() // Combined rule for Compose + Engine
 
 @Test
 fun testGestureFlow() {
-    UiEngine.withRobot(GestureRobot()) {
+    UiTestEngine.withRobot(GestureRobot()) {
         tapMainBox()
         verifyStatus("Tapped")
     }
@@ -133,7 +133,7 @@ DEBUG GestureActions - Performing semantics click on tag: login_button
 ```
 
 > [!TIP]
-> You can disable these verbose step-by-step logs by setting `verboseLogging = false` in the `UiEngine.configure()` block.
+> You can disable these verbose step-by-step logs by setting `verboseLogging = false` in the `UiTestEngine.configure()` block.
 
 ---
 
@@ -166,15 +166,15 @@ class FeatureTest {
     @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
 
-    // Automatically registers with UiEngine and handles Hilt lifecycle
+    // Automatically registers with UiTestEngine and handles Hilt lifecycle
     @get:Rule(order = 1)
-    val rule = UiEngine.createHiltRule(MainActivity::class.java)
+    val rule = UiTestEngine.createHiltRule(MainActivity::class.java)
 
     @Test
     fun testWithInjectedRobot() {
         hiltRule.inject()
         
-        UiEngine.withRobot(InjectedRobot()) {
+        UiTestEngine.withRobot(InjectedRobot()) {
             performBusinessLogic()
         }
     }
@@ -182,7 +182,7 @@ class FeatureTest {
 
 class InjectedRobot : ComposeRuleScope {
     // Access your Hilt graph directly inside the robot
-    private val api: MyApiService by UiEngine.getTestEntryPoint()
+    private val api: MyApiService by UiTestEngine.getTestEntryPoint()
 
     fun performBusinessLogic() {
         // ...
@@ -191,17 +191,17 @@ class InjectedRobot : ComposeRuleScope {
 ```
 
 *   **Rule Chaining**: Always use `order = 0` for `HiltAndroidRule` to ensure the Dagger graph is ready before the Activity starts.
-*   **Entry Points**: Use the `by UiEngine.getTestEntryPoint()` delegate to access singletons without constructor injection.
+*   **Entry Points**: Use the `by UiTestEngine.getTestEntryPoint()` delegate to access singletons without constructor injection.
 
 ---
 
 ## ⚙️ Global Configuration
 
-You can customize the engine's behavior (timeouts, logging, diagnostics) globally by calling `UiEngine.configure()`. This is typically done in a custom `TestRunner` or a `@BeforeClass` method.
+You can customize the engine's behavior (timeouts, logging, diagnostics) globally by calling `UiTestEngine.configure()`. This is typically done in a custom `TestRunner` or a `@BeforeClass` method.
 
 ```kotlin
-UiEngine.configure(
-    UiEngine.Configuration(
+UiTestEngine.configure(
+    UiTestEngine.Configuration(
         defaultTimeoutMillis = 10_000L, // 10 seconds for robust actions
         pollIntervalMillis = 100L,      // Interval between retries
         verboseLogging = false,         // Cleaner Logcat for passing tests
@@ -220,8 +220,8 @@ The `:engine-lint` module ensures your team doesn't regress into flaky habits.
 ### 1. Forbidden API Usage (`DirectUiTestApiUsage`)
 Detects direct usage of standard Compose APIs like `performClick()` or `onNodeWithTag()` and flags them as errors, suggesting the robust Engine equivalent via QuickFix.
 
-### 2. Missing Engine Setup (`MissingUiEngineSetup`)
-Ensures that `UiEngine.withRobot` is never called without a properly configured rule. It flags missing `UiEngineRule` declarations or manual setup calls as errors before your tests ever run.
+### 2. Missing Engine Setup (`MissingUiTestEngineSetup`)
+Ensures that `UiTestEngine.withRobot` is never called without a properly configured rule. It flags missing `UiTestEngineRule` declarations or manual setup calls as errors before your tests ever run.
 
 ---
 
@@ -246,11 +246,11 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "0.3.0-alpha"
+engine = "0.3.0-beta01"
 
 [libraries]
-uiengine = { group = "com.github.rajbirsehmi.UI-Engine", name = "robot-testing-engine", version.ref = "engine" }
-engine-lint = { group = "com.github.rajbirsehmi.UI-Engine", name = "engine-lint", version.ref = "engine" }
+uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "robot-testing-engine", version.ref = "engine" }
+engine-lint = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "engine-lint", version.ref = "engine" }
 ```
 
 ### 3. Add Dependency & Configuration

@@ -15,17 +15,17 @@ import kotlin.reflect.KProperty
  * A [ComposeTestRule] wrapper that integrates with Hilt and the UI Automation Engine.
  */
 class HiltAutomationComposeTestRule<A : ComponentActivity>(
-    private val composeRule: AndroidComposeTestRule<*, A>,
-) : ComposeContentTestRule by composeRule {
+    private val uiTestEngineRule: AndroidComposeTestRule<*, A>,
+) : ComposeContentTestRule by uiTestEngineRule {
 
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
-                UiEngine.setComposeRule(composeRule)
+                UiTestEngine.setComposeRule(uiTestEngineRule)
                 try {
-                    composeRule.apply(base, description).evaluate()
+                    uiTestEngineRule.apply(base, description).evaluate()
                 } finally {
-                    UiEngine.clearComposeRule()
+                    UiTestEngine.clearComposeRule()
                 }
             }
         }
@@ -38,11 +38,11 @@ class HiltAutomationComposeTestRule<A : ComponentActivity>(
  * @param activityClass The Activity class to launch for the test.
  */
 @Suppress("UNUSED_PARAMETER", "DEPRECATION")
-fun <A : ComponentActivity> UiEngine.createHiltRule(
+fun <A : ComponentActivity> UiTestEngine.createHiltRule(
     activityClass: Class<A>
 ): ComposeContentTestRule {
-    val composeRule = createAndroidComposeRule(activityClass)
-    return HiltAutomationComposeTestRule(composeRule)
+    val uiTestEngineRule = createAndroidComposeRule(activityClass)
+    return HiltAutomationComposeTestRule(uiTestEngineRule)
 }
 
 /**
@@ -65,9 +65,9 @@ class HiltEntryPointDelegate<T>(private val entryPointClass: Class<T>) {
  *
  * Example:
  * ```
- * val viewModel: MyViewModel by UiEngine.getTestEntryPoint()
+ * val viewModel: MyViewModel by UiTestEngine.getTestEntryPoint()
  * ```
  */
-inline fun <reified T> UiEngine.getTestEntryPoint(): HiltEntryPointDelegate<T> {
+inline fun <reified T> UiTestEngine.getTestEntryPoint(): HiltEntryPointDelegate<T> {
     return HiltEntryPointDelegate(T::class.java)
 }

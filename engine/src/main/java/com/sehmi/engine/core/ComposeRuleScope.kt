@@ -1,7 +1,7 @@
 package com.sehmi.engine.core
 
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import com.sehmi.engine.UiEngine
+import com.sehmi.engine.UiTestEngine
 
 /**
  * Represents a scope that provides access to the [ComposeTestRule].
@@ -12,15 +12,15 @@ import com.sehmi.engine.UiEngine
  * Implementing this scope allows for a clean DSL-like syntax when performing UI interactions 
  * within the Compose testing framework.
  *
- * @property composeRule The underlying [ComposeTestRule] used for UI interactions.
+ * @property uiTestEngineRule The underlying [ComposeTestRule] used for UI interactions.
  */
 interface ComposeRuleScope {
     /**
      * The [ComposeTestRule] used for UI interactions. 
-     * Defaults to the rule managed by [UiEngine].
+     * Defaults to the rule managed by [UiTestEngine].
      */
-    val composeRule: ComposeTestRule
-        get() = UiEngine.composeRule
+    val uiTestEngineRule: ComposeTestRule
+        get() = UiTestEngine.uiTestEngineRule
 }
 
 /**

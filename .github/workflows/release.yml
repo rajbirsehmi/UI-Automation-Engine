@@ -11,6 +11,8 @@ on:
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
       - 'release-notes.md'
+      - '.github/workflows/**'
+      - '.github/workflows/**'
   pull_request:
     branches:
       - main
@@ -21,6 +23,8 @@ on:
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
       - 'release-notes.md'
+      - '.github/workflows/**'
+      - '.github/workflows/**'
 
 jobs:
   build-and-release:
@@ -110,4 +114,4 @@ jobs:
           # Trigger JitPack to start building the new release automatically
           TAG_NAME="${{ steps.get_version.outputs.VERSION }}"
           echo "Pinging JitPack for $TAG_NAME..."
-          curl -s "https://jitpack.io/api/builds/com.github.rajbirsehmi/UI-Engine/$TAG_NAME" > /dev/null
+          curl -s "https://jitpack.io/api/builds/com.github.rajbirsehmi/UI-Automation-Engine/$TAG_NAME" > /dev/null

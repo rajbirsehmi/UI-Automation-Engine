@@ -16,8 +16,8 @@ import org.junit.runners.model.Statement
  * This object allows host applications to configure engine-wide settings such as 
  * default timeouts and logging levels, and manages the lifecycle of the [ComposeTestRule].
  */
-object UiEngine {
-    private val logger: Logger = LogManager.getLogger("UiEngine")
+object UiTestEngine {
+    private val logger: Logger = LogManager.getLogger("UiTestEngine")
     private val rule = ThreadLocal<ComposeTestRule>()
     private val isRobustContext = ThreadLocal.withInitial { false }
 
@@ -57,11 +57,11 @@ object UiEngine {
      *
      * @throws IllegalStateException if the rule has not been set.
      */
-    val composeRule: ComposeTestRule
+    val uiTestEngineRule: ComposeTestRule
         get() = rule.get() ?: throw IllegalStateException(
-            "ComposeTestRule is not set in UiEngine. " +
+            "ComposeTestRule is not set in UiTestEngine. " +
             "Ensure you are using createUiAutomationRule() or have registered " +
-            "UiEngineRule in your test class.",
+            "UiTestEngineRule in your test class.",
         )
 
     /**
@@ -100,7 +100,7 @@ object UiEngine {
     /**
      * DSL entry-point to execute actions and assertions on a robot.
      *
-     * This version uses the rule stored in [UiEngine], allowing for a cleaner syntax
+     * This version uses the rule stored in [UiTestEngine], allowing for a cleaner syntax
      * when the rule is set globally.
      *
      * @param T The type of the robot, which must implement [ComposeRuleScope].
@@ -115,7 +115,7 @@ object UiEngine {
     }
 
     /**
-     * Creates a [ComposeContentTestRule] that is automatically registered with the [UiEngine].
+     * Creates a [ComposeContentTestRule] that is automatically registered with the [UiTestEngine].
      *
      * This is the recommended way to initialize the UI Automation Engine in your tests,
      * as it eliminates the need for manual setup.
@@ -123,50 +123,50 @@ object UiEngine {
      * Example:
      * ```
      * @get:Rule
-     * val rule = UiEngine.createRule()
+     * val rule = UiTestEngine.createRule()
      *
      * @Test
      * fun myTest() {
-     *     UiEngine.withRobot(MyRobot()) { /* robot logic */ }
+     *     UiTestEngine.withRobot(MyRobot()) { /* robot logic */ }
      * }
      * ```
      */
     @Suppress("DEPRECATION")
-    fun createRule(): ComposeContentTestRule {
-        return AutomationComposeContentTestRule(createComposeRule())
+    fun createRule(): UiTestEngineContentRule {
+        return UiTestEngineContentRule(createComposeRule())
     }
 }
 
 /**
- * A JUnit Rule that automatically registers the [ComposeTestRule] with [UiEngine].
+ * A JUnit Rule that automatically registers the [ComposeTestRule] with [UiTestEngine].
  *
  * Internal use only.
  */
 @Suppress("unused")
-class UiEngineRule(private val composeTestRule: ComposeTestRule) : TestWatcher() {
+class UiTestEngineRule(private val composeTestRule: ComposeTestRule) : TestWatcher() {
     override fun starting(description: Description) {
-        UiEngine.setComposeRule(composeTestRule)
+        UiTestEngine.setComposeRule(composeTestRule)
     }
 
     override fun finished(description: Description) {
-        UiEngine.clearComposeRule()
+        UiTestEngine.clearComposeRule()
     }
 }
 
 /**
- * A [ComposeContentTestRule] wrapper that automatically registers itself with [UiEngine].
+ * A [ComposeContentTestRule] wrapper that automatically registers itself with [UiTestEngine].
  */
-class AutomationComposeContentTestRule(
+class UiTestEngineContentRule(
     private val baseRule: ComposeContentTestRule
 ) : ComposeContentTestRule by baseRule {
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
-                UiEngine.setComposeRule(baseRule)
+                UiTestEngine.setComposeRule(baseRule)
                 try {
                     baseRule.apply(base, description).evaluate()
                 } finally {
-                    UiEngine.clearComposeRule()
+                    UiTestEngine.clearComposeRule()
                 }
             }
         }

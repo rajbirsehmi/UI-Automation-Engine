@@ -1,7 +1,7 @@
 package com.sehmi.engine.utils
 
 import android.util.Log
-import com.sehmi.engine.UiEngine
+import com.sehmi.engine.UiTestEngine
 import com.sehmi.engine.actions.takeScreenshot
 import com.sehmi.engine.core.ComposeRuleScope
 import com.sehmi.engine.matchers.printUnmergedTree
@@ -26,8 +26,8 @@ private val logger: Logger = LogManager.getLogger("FlakinessUtils")
  * @throws Throwable The last error encountered if the timeout is reached.
  */
 internal fun <T> ComposeRuleScope.waitUntil(
-    timeoutMillis: Long = UiEngine.config.defaultTimeoutMillis,
-    pollIntervalMillis: Long = UiEngine.config.pollIntervalMillis,
+    timeoutMillis: Long = UiTestEngine.config.defaultTimeoutMillis,
+    pollIntervalMillis: Long = UiTestEngine.config.pollIntervalMillis,
     action: () -> T,
 ): T {
     logger.debugStep("Starting robust waitUntil: timeoutMillis=$timeoutMillis")
@@ -51,7 +51,7 @@ internal fun <T> ComposeRuleScope.waitUntil(
             logger.debugStep("waitUntil attempt $attempt failed: ${e.message}. Syncing UI and retrying...")
             
             // Sync UI state
-            composeRule.waitForIdle()
+            uiTestEngineRule.waitForIdle()
             
             // Responsive sleep: check the clock frequently to avoid over-sleeping
             Thread.sleep(internalStep)
@@ -67,8 +67,8 @@ internal fun <T> ComposeRuleScope.waitUntil(
  * Warning: This version does NOT advance the Compose virtual clock automatically.
  */
 internal fun <T> waitUntil(
-    timeoutMillis: Long = UiEngine.config.defaultTimeoutMillis,
-    pollIntervalMillis: Long = UiEngine.config.pollIntervalMillis,
+    timeoutMillis: Long = UiTestEngine.config.defaultTimeoutMillis,
+    pollIntervalMillis: Long = UiTestEngine.config.pollIntervalMillis,
     action: () -> T,
 ): T {
     val startTime = System.currentTimeMillis()
@@ -111,16 +111,16 @@ internal fun <T> ComposeRuleScope.runRobustly(
     tag: String? = null,
     block: ComposeRuleScope.() -> T
 ): T {
-    val isNested = UiEngine.inRobustContext
+    val isNested = UiTestEngine.inRobustContext
     if (!isNested) {
         logger.infoStep("Starting runRobustly: description='$description', tag=${tag ?: "N/A"}")
-        UiEngine.inRobustContext = true
+        UiTestEngine.inRobustContext = true
     }
     
     return try {
         if (!isNested) {
             logger.debugStep("Waiting for Compose UI to be idle")
-            composeRule.waitForIdle()
+            uiTestEngineRule.waitForIdle()
         }
         
         val result = this.block()
@@ -141,11 +141,11 @@ internal fun <T> ComposeRuleScope.runRobustly(
         
         // Capture Diagnostics
         try {
-            if (UiEngine.config.autoDumpSemantics) {
+            if (UiTestEngine.config.autoDumpSemantics) {
                 logger.debugStep("Capturing diagnostics: printUnmergedTree")
                 printUnmergedTree(tag)
             }
-            if (UiEngine.config.autoCaptureScreenshots) {
+            if (UiTestEngine.config.autoCaptureScreenshots) {
                 logger.debugStep("Capturing diagnostics: takeScreenshot({})", failureName)
                 takeScreenshot(failureName)
             }
@@ -163,9 +163,8 @@ internal fun <T> ComposeRuleScope.runRobustly(
         throw AssertionError(enrichedMessage, e)
     } finally {
         if (!isNested) {
-            UiEngine.inRobustContext = false
+            UiTestEngine.inRobustContext = false
             logger.debugStep("runRobustly finished for: $description")
         }
     }
 }
-
