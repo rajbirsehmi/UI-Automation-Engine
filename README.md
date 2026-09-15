@@ -4,6 +4,7 @@
 [![Android](https://img.shields.io/badge/Platform-Android-brightgreen.svg?style=flat-square)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-blue.svg?style=flat-square)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-navy.svg?style=flat-square)](https://developer.android.com/jetpack/compose)
+[![Java](https://img.shields.io/badge/Java-17-orange.svg?style=flat-square)](https://www.oracle.com/java/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **UI Automation Engine** is an industrial-grade testing framework for Jetpack Compose. It eliminates the most common pain points of UI testing: **flakiness**, **race conditions**, and **opaque failure logs**. 
@@ -14,6 +15,7 @@ By providing a robust orchestration layer over standard Compose APIs, it ensures
 
 ## 📖 Table of Contents
 - [Core Philosophy](#-core-philosophy)
+- [Requirements](#-requirements)
 - [Architecture: The Robot Pattern](#-architecture-the-robot-pattern)
 - [The Robustness Pipeline](#-the-robustness-pipeline)
 - [Key Features](#-key-features)
@@ -33,6 +35,16 @@ The Engine follows three core principles:
 1. **Readable DSL**: Tests should read like user stories.
 2. **Deterministic Execution**: Every action is synchronized with the Compose clock and idle state.
 3. **Artifact-First Failures**: A failing test should tell you *why* it failed with a screenshot and a tree dump, not just a stack trace.
+
+---
+
+## 📋 Requirements
+
+> [!IMPORTANT]
+> **Java 17 Required**: The engine is built with and requires Java 17 for both the build process and the runtime environment. See [Java 17 Configuration](#6-java-17-configuration) for setup steps.
+
+- **Android SDK 30+**: Minimum supported Android API level.
+- **Jetpack Compose**: Designed specifically for Compose-based UIs.
 
 ---
 
@@ -323,6 +335,22 @@ android {
         }
     }
 }
+
+### 6. Java 17 Configuration
+Ensure your project is configured to use Java 17 in your `android` block:
+
+```kotlin
+android {
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+```
 ```
 
 ---
