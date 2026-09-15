@@ -75,6 +75,14 @@ android {
     }
 }
 
+dokka {
+    dokkaSourceSets.configureEach {
+        if (name != "standardRelease") {
+            suppress.set(true)
+        }
+    }
+}
+
 // Task to generate a Dokka-based Javadoc JAR
 val dokkaJavadocJar = tasks.register<Jar>("dokkaJavadocJar") {
     dependsOn("dokkaGeneratePublicationHtml")
