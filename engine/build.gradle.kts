@@ -136,7 +136,7 @@ publishing {
         register<MavenPublication>("maven") {
             groupId = "com.github.rajbirsehmi.UI-Automation-Engine"
             artifactId = "robot-testing-engine"
-            version = "0.3.0-beta01"
+            version = "0.3.0-beta02"
 
             afterEvaluate {
                 from(components["engine"])
