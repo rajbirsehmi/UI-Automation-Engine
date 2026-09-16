@@ -129,13 +129,14 @@ fun ComposeRuleScope.scrollToKey(containerTag: String, key: Any, useUnmergedTree
 }
 
 /**
- * Performs a defensive swipe gesture repeatedly until a target node becomes visible.
+ * Performs a defensive swipe gesture repeatedly on a specified container until a target node becomes visible.
  *
  * This interaction is designed for dynamic lists or pages where the number of items 
  * is unknown or the target element is far below the fold. It performs a swipe in 
- * the specified [direction], synchronizes with the UI idle state, and checks for 
- * the [targetTag] presence in each step.
+ * the specified [direction] on the container identified by [containerTag], 
+ * synchronizes with the UI idle state, and checks for the [targetTag] presence in each step.
  *
+ * @param containerTag The test tag of the scrollable container or layout to perform the swipe on (defaults to "root").
  * @param targetTag The test tag of the element to wait for.
  * @param direction The [Direction] to swipe in (e.g., Direction.UP to scroll down).
  * @param maxSwipes The maximum number of swipe attempts before giving up.
@@ -144,13 +145,14 @@ fun ComposeRuleScope.scrollToKey(containerTag: String, key: Any, useUnmergedTree
  */
 @Suppress("unused")
 fun ComposeRuleScope.swipeUntilVisible(
+    containerTag: String = "root",
     targetTag: String,
     direction: Direction,
     maxSwipes: Int = 10,
     useUnmergedTree: Boolean = false,
 ) {
-    logger.infoStep("Starting swipeUntilVisible: targetTag=$targetTag, direction=$direction, maxSwipes=$maxSwipes, useUnmergedTree=$useUnmergedTree")
-    runRobustly("Swipe until $targetTag is visible", targetTag) {
+    logger.infoStep("Starting swipeUntilVisible: containerTag=$containerTag, targetTag=$targetTag, direction=$direction, maxSwipes=$maxSwipes, useUnmergedTree=$useUnmergedTree")
+    runRobustly("Swipe on $containerTag until $targetTag is visible", targetTag) {
         var swiped = 0
         while (swiped < maxSwipes) {
             try {
@@ -162,9 +164,9 @@ fun ComposeRuleScope.swipeUntilVisible(
                 logger.debugStep("Target tag $targetTag found")
                 return@runRobustly
             } catch (_: AssertionError) {
-                logger.debugStep("Target tag $targetTag not found, performing swipe $direction")
-                // Not found, perform global swipe on the root node
-                uiTestEngineRule.onNodeWithTag("root").performTouchInput {
+                logger.debugStep("Target tag $targetTag not found, performing swipe $direction on container $containerTag")
+                // Not found, perform swipe on the specified container
+                uiTestEngineRule.onNodeWithTag(containerTag).performTouchInput {
                     when (direction) {
                         Direction.UP -> swipeUp()
                         Direction.DOWN -> swipeDown()

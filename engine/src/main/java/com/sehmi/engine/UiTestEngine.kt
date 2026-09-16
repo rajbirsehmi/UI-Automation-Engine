@@ -39,6 +39,8 @@ object UiTestEngine {
         val pollIntervalMillis: Long = 100L,
         /** Whether to automatically capture screenshots on failure. */
         val autoCaptureScreenshots: Boolean = true,
+        /** The directory to save screenshots in. If null, uses additionalTestOutputDir or app cache. */
+        val screenshotDirectory: String? = null,
         /** Whether to automatically dump the semantics tree on failure. */
         val autoDumpSemantics: Boolean = true,
         /** Whether to enable verbose logging for every automation step. */

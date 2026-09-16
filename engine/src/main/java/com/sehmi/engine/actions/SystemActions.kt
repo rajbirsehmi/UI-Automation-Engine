@@ -1,5 +1,7 @@
 package com.sehmi.engine.actions
 
+import android.os.Bundle
+import com.sehmi.engine.UiTestEngine
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -74,29 +76,61 @@ fun ComposeRuleScope.rotateScreen(orientation: Orientation) {
 }
 
 /**
- * Safely handles system permission dialogs by clicking the appropriate button.
- *
- * This utility uses fuzzy text matching to handle differences across Android OS versions 
- * and locales (e.g., matching "Allow", "Grant", or "Allow only while using the app").
- *
- * @param allow True to grant the permission, false to deny it.
+ * Options for handling system permission dialogs.
  */
-@Suppress("unused")
-fun ComposeRuleScope.handlePermissionDialog(allow: Boolean) {
-    logger.infoStep("Starting handlePermissionDialog: allow=$allow")
+enum class PermissionAction {
+    /** Grant the permission "While using the app". Also matches "Allow" or "Grant". */
+    WHILE_USING_THE_APP,
+    /** Grant the permission "Only this time". */
+    ONLY_THIS_TIME,
+    /** Deny the permission. Matches "Don't allow" or "Deny". */
+    DONT_ALLOW
+}
+
+/**
+ * Safely handles system permission dialogs by clicking the specified [action].
+ *
+ * This utility uses fuzzy text matching to handle differences across Android OS versions
+ * and locales (e.g., matching "Allow", "Grant", or "While using the app").
+ *
+ * @param action The [PermissionAction] to perform.
+ */
+fun ComposeRuleScope.handlePermissionDialog(action: PermissionAction) {
+    logger.infoStep("Starting handlePermissionDialog: action=$action")
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val buttonText = if (allow) "Allow" else "Deny"
-    logger.debugStep("Searching for permission dialog button with text matching '$buttonText'")
-    // Use regex to handle different OS versions/locales
-    val permissionButton = device.findObject(UiSelector().textMatches("(?i)($buttonText|Allow|Grant).*"))
+
+    val regex = when (action) {
+        PermissionAction.WHILE_USING_THE_APP -> "(?i)(While using the app|Allow|Grant).*"
+        PermissionAction.ONLY_THIS_TIME -> "(?i)(Only this time).*"
+        PermissionAction.DONT_ALLOW -> "(?i)(Don't allow|Deny).*"
+    }
+
+    logger.debugStep("Searching for permission dialog button with regex matching '$regex'")
+    val permissionButton = device.findObject(UiSelector().textMatches(regex))
+
     if (permissionButton.exists()) {
         logger.debugStep("Permission button found, clicking")
         permissionButton.click()
         uiTestEngineRule.waitForIdle()
         logger.debugStep("Permission dialog handled and UI idle")
     } else {
-        logger.debugStep("Permission button not found")
+        logger.debugStep("Permission button not found for action $action")
     }
+}
+
+/**
+ * Safely handles system permission dialogs by clicking the appropriate button.
+ *
+ * This is a compatibility overload. For more control (e.g., "Only this time"),
+ * use [handlePermissionDialog(PermissionAction)].
+ *
+ * @param allow True to grant the permission (maps to [PermissionAction.WHILE_USING_THE_APP]),
+ *              false to deny it (maps to [PermissionAction.DONT_ALLOW]).
+ */
+@Suppress("unused")
+fun ComposeRuleScope.handlePermissionDialog(allow: Boolean) {
+    val action = if (allow) PermissionAction.WHILE_USING_THE_APP else PermissionAction.DONT_ALLOW
+    handlePermissionDialog(action)
 }
 
 /**
@@ -118,23 +152,54 @@ fun ComposeRuleScope.waitForSystemWindow(packageName: String, timeoutMillis: Lon
 }
 
 /**
- * Captures a screenshot of the current device screen and saves it as a PNG file 
- * in the external cache directory.
+ * Captures a screenshot of the current device screen and saves it as a PNG file.
  *
- * This is primarily used by the robust action pipeline to collect diagnostic artifacts 
- * on failure.
+ * The screenshot is saved to one of the following locations (in order of priority):
+ * 1. [UiTestEngine.config.screenshotDirectory] if set.
+ * 2. The `additionalTestOutputDir` instrumentation argument if provided (standard for Gradle).
+ * 3. The app's external cache directory.
+ * 4. The app's internal cache directory.
  *
  * @param name The base name for the screenshot file (excluding extension).
+ * @return The absolute path to the captured screenshot, or null if capture failed.
  */
-internal fun takeScreenshot(name: String) {
+internal fun takeScreenshot(name: String): String? {
     logger.infoStep("Starting takeScreenshot: name=$name")
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val context = InstrumentationRegistry.getInstrumentation().targetContext
-    val path = context.externalCacheDir ?: context.cacheDir
-    val file = File(path, "$name.png")
-    logger.debugStep("Saving screenshot to: ${file.absolutePath}")
-    device.takeScreenshot(file)
-    logger.debugStep("takeScreenshot completed")
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val device = UiDevice.getInstance(instrumentation)
+    val context = instrumentation.targetContext
+
+    // Resolve storage directory
+    val configDir: String? = UiTestEngine.config.screenshotDirectory
+    val additionalOutputDir: String? = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
+
+    val targetDir: File? = when {
+        configDir != null -> File(configDir)
+        additionalOutputDir != null -> File(additionalOutputDir)
+        else -> context.externalCacheDir ?: context.cacheDir
+    }
+
+    if (targetDir != null && !targetDir.exists()) {
+        targetDir.mkdirs()
+    }
+
+    val file = File(targetDir, "$name.png")
+    val absolutePath = file.absolutePath
+    logger.debugStep("Saving screenshot to: $absolutePath")
+
+    val success = device.takeScreenshot(file)
+    return if (success) {
+        logger.debugStep("takeScreenshot completed")
+        // Report to instrumentation metadata
+        val status = Bundle().apply {
+            putString("screenshot_path", absolutePath)
+        }
+        instrumentation.sendStatus(0, status)
+        absolutePath
+    } else {
+        logger.error("takeScreenshot failed")
+        null
+    }
 }
 
 /**
