@@ -103,7 +103,7 @@ class EngineContractTest : ComposeRuleScope {
         }
 
         assertThrows(AssertionError::class.java) {
-            swipeUntilVisible("never_appearing_tag", Direction.UP, maxSwipes = 2)
+            swipeUntilVisible(containerTag = "root", targetTag = "never_appearing_tag", direction = Direction.UP, maxSwipes = 2)
         }
     }
 

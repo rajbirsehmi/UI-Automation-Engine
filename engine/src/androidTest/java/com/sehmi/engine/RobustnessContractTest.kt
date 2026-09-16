@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.sehmi.engine.assertions.*
 import com.sehmi.engine.actions.*
 import com.sehmi.engine.core.ComposeRuleScope
@@ -17,6 +18,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class RobustnessContractTest : ComposeRuleScope {
@@ -66,7 +68,8 @@ class RobustnessContractTest : ComposeRuleScope {
 
         assertTrue(error.message!!.contains("Automation Failure: Failing Action"))
         assertTrue(error.message!!.contains("Target Tag: target"))
-        assertTrue(error.message!!.contains("Artifact: FAILURE_"))
+        assertTrue(error.message!!.contains("Artifact: "))
+        assertTrue(error.message!!.contains("FAILURE_"))
         assertTrue(error.message!!.contains("Original Error: Core Error"))
     }
 
@@ -137,5 +140,37 @@ class RobustnessContractTest : ComposeRuleScope {
         }
         
         assertTrue(rule.mainClock.autoAdvance)
+    }
+
+    @Test
+    fun testCustomScreenshotDirectoryIsRespected() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val customDir = context.cacheDir.absolutePath + "/custom_screenshots"
+        UiTestEngine.configure(
+            UiTestEngine.Configuration(
+                screenshotDirectory = customDir,
+                autoCaptureScreenshots = true,
+                autoDumpSemantics = false
+            )
+        )
+
+        val error = assertThrows(AssertionError::class.java) {
+            runRobustly("Test custom dir") {
+                throw RuntimeException("Fail for screenshot")
+            }
+        }
+
+        assertTrue("Error message should contain custom dir: ${error.message}", 
+            error.message!!.contains(customDir))
+        
+        val dir = File(customDir)
+        assertTrue("Directory should be created: ${dir.absolutePath}", dir.exists())
+        val files = dir.listFiles()
+        assertTrue("Screenshot should exist in custom dir", 
+            files?.any { it.name.contains("FAILURE_") && it.name.endsWith(".png") } == true)
+        
+        // Cleanup and Reset
+        dir.deleteRecursively()
+        UiTestEngine.configure(UiTestEngine.Configuration())
     }
 }

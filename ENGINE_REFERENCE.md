@@ -49,6 +49,18 @@ fun setupEngine() {
 | `autoDumpSemantics` | `true` | Automatically dumps the unmerged tree on failure. |
 | `verboseLogging` | `true` | Enables high-level "Starting/Completed" logs for every step. |
 
+### `UiTestEngine.enablePermission(permission, packageName)`
+Programmatically grants a runtime permission directly to the app under test using `UiAutomation` without manual UI clicks.
+
+#### Example Usage:
+```kotlin
+@Test
+fun testNotificationFeature() {
+    UiTestEngine.enablePermission("android.permission.POST_NOTIFICATIONS")
+    // Run test logic safely with the permission granted
+}
+```
+
 ---
 
 ## Core Architecture
@@ -141,6 +153,7 @@ These actions use UIAutomator internally to interact with the Android OS outside
 | `pressHome()` | Triggers the system home button. |
 | `rotateScreen(orient)` | Rotates to `Orientation.PORTRAIT` or `LANDSCAPE`. |
 | `handlePermissionDialog(allow)` | Automatically finds and clicks "Allow" or "Deny" on system dialogs. |
+| `handlePermissionDialog(action)`| Clicks a specific `PermissionAction` (WHILE_USING_THE_APP, ONLY_THIS_TIME, DONT_ALLOW). |
 | `waitForSystemWindow(pkg)` | Waits for an external app or system window to appear. |
 | `openNotificationShade()`| Opens the Android notification tray. |
 | `clickNotification(text)` | Finds and clicks a notification by its text. |

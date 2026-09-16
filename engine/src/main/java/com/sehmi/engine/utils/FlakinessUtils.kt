@@ -140,6 +140,7 @@ internal fun <T> ComposeRuleScope.runRobustly(
         Log.e("ComposeAutomation", "Robust action failed: $description. Capturing diagnostics...")
         
         // Capture Diagnostics
+        var screenshotPath: String? = null
         try {
             if (UiTestEngine.config.autoDumpSemantics) {
                 logger.debugStep("Capturing diagnostics: printUnmergedTree")
@@ -147,7 +148,7 @@ internal fun <T> ComposeRuleScope.runRobustly(
             }
             if (UiTestEngine.config.autoCaptureScreenshots) {
                 logger.debugStep("Capturing diagnostics: takeScreenshot({})", failureName)
-                takeScreenshot(failureName)
+                screenshotPath = takeScreenshot(failureName)
             }
         } catch (diagError: Throwable) {
             Log.e("ComposeAutomation", "Failed to capture diagnostics: ${diagError.message}")
@@ -156,7 +157,7 @@ internal fun <T> ComposeRuleScope.runRobustly(
         val enrichedMessage = """
             |Automation Failure: $description
             |Target Tag: ${tag ?: "N/A"}
-            |Artifact: $failureName.png
+            |Artifact: ${screenshotPath ?: "$failureName.png"}
             |Original Error: ${e.message}
         """.trimMargin()
         
