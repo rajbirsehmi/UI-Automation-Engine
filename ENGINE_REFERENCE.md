@@ -49,6 +49,18 @@ fun setupEngine() {
 | `autoDumpSemantics` | `true` | Automatically dumps the unmerged tree on failure. |
 | `verboseLogging` | `true` | Enables high-level "Starting/Completed" logs for every step. |
 
+### `UiTestEngine.enablePermission(permission, packageName)`
+Programmatically grants a runtime permission directly to the app under test using `UiAutomation` without manual UI clicks.
+
+#### Example Usage:
+```kotlin
+@Test
+fun testNotificationFeature() {
+    UiTestEngine.enablePermission("android.permission.POST_NOTIFICATIONS")
+    // Run test logic safely with the permission granted
+}
+```
+
 ---
 
 ## Core Architecture

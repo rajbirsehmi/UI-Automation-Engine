@@ -3,6 +3,7 @@ package com.sehmi.engine
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.platform.app.InstrumentationRegistry
 import com.sehmi.engine.core.ComposeRuleScope
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -79,6 +80,27 @@ object UiTestEngine {
             logger.info("Configuring UI Engine: $configuration")
         }
         _config = configuration
+    }
+
+    /**
+     * Programmatically grants a runtime permission to the app under test.
+     *
+     * This uses the system's [android.app.UiAutomation] to grant the specified runtime [permission]
+     * directly without needing any UI interaction.
+     *
+     * Example:
+     * ```
+     * UiTestEngine.enablePermission("android.permission.POST_NOTIFICATIONS")
+     * ```
+     *
+     * @param permission The fully qualified name of the permission (e.g. "android.permission.POST_NOTIFICATIONS").
+     * @param packageName Optional package name of the app. Defaults to the target context's package name.
+     */
+    fun enablePermission(permission: String, packageName: String? = null) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val targetPackage = packageName ?: instrumentation.targetContext.packageName
+        logger.info("Granting runtime permission: $permission to package: $targetPackage")
+        instrumentation.uiAutomation.grantRuntimePermission(targetPackage, permission)
     }
 
     /**

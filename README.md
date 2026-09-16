@@ -223,6 +223,12 @@ UiTestEngine.configure(
 )
 ```
 
+### Programmatic Permissions
+You can grant runtime permissions directly without clicking through dialogs:
+```kotlin
+UiTestEngine.enablePermission("android.permission.POST_NOTIFICATIONS")
+```
+
 ---
 
 ## 🚫 Static Analysis (Lint)
@@ -258,7 +264,7 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "0.3.0-beta02"
+engine = "0.3.0-beta03"
 
 [libraries]
 uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "robot-testing-engine", version.ref = "engine" }
