@@ -35,7 +35,9 @@ fun setupEngine() {
             pollIntervalMillis = 150L,
             verboseLogging = false,
             autoCaptureScreenshots = true,
-            autoDumpSemantics = true
+            autoDumpSemantics = true,
+            autoCaptureLogcat = true,
+            logcatTailLines = 150
         )
     )
 }
@@ -47,6 +49,9 @@ fun setupEngine() {
 | `pollIntervalMillis` | `100L` | Interval between polling attempts in `waitUntil`. |
 | `autoCaptureScreenshots`| `true` | Automatically takes a screenshot on failure. |
 | `autoDumpSemantics` | `true` | Automatically dumps the unmerged tree on failure. |
+| `autoCaptureLogcat` | `true` | Automatically captures a Logcat tail on failure. |
+| `autoCaptureViewHierarchy`| `false`| Automatically dumps the Android View hierarchy on failure. |
+| `logcatTailLines` | `100` | Number of Logcat lines to capture on failure. |
 | `verboseLogging` | `true` | Enables high-level "Starting/Completed" logs for every step. |
 
 ### `UiTestEngine.enablePermission(permission, packageName)`
@@ -266,7 +271,9 @@ The engine's "secret sauce." Every action is wrapped in this.
     1.  Logs the failure with a human-readable description.
     2.  Dumps the semantics tree to Logcat.
     3.  Takes a screenshot named `FAILURE_<timestamp>.png`.
-    4.  Throws an `AssertionError` with all this context attached.
+    4.  Captures a Logcat tail to `FAILURE_<timestamp>.log`.
+    5.  (Optional) Dumps the View hierarchy to `FAILURE_<timestamp>.xml`.
+    6.  Throws an `AssertionError` with all this context attached.
 
 ### `waitUntil`
 A polling utility used internally for flakiness resilience.

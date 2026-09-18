@@ -203,6 +203,72 @@ internal fun takeScreenshot(name: String): String? {
 }
 
 /**
+ * Captures a tail of the Logcat output and saves it to a file.
+ *
+ * @param name The base name for the log file.
+ * @param tailLines The number of lines to capture.
+ * @return The absolute path to the log file, or null if failed.
+ */
+internal fun captureLogcat(name: String, tailLines: Int): String? {
+    logger.infoStep("Starting captureLogcat: name=$name, tailLines=$tailLines")
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val device = UiDevice.getInstance(instrumentation)
+    val context = instrumentation.targetContext
+
+    val targetDir: File? = when {
+        UiTestEngine.config.screenshotDirectory != null -> File(UiTestEngine.config.screenshotDirectory!!)
+        InstrumentationRegistry.getArguments().getString("additionalTestOutputDir") != null -> 
+            File(InstrumentationRegistry.getArguments().getString("additionalTestOutputDir"))
+        else -> context.externalCacheDir ?: context.cacheDir
+    }
+
+    if (targetDir != null && !targetDir.exists()) targetDir.mkdirs()
+
+    val file = File(targetDir, "$name.log")
+    return try {
+        val logs = device.executeShellCommand("logcat -t $tailLines")
+        file.writeText(logs)
+        logger.debugStep("Logcat captured to: ${file.absolutePath}")
+        file.absolutePath
+    } catch (e: Exception) {
+        logger.error("Failed to capture logcat", e)
+        null
+    }
+}
+
+/**
+ * Dumps the current Android View hierarchy to an XML file.
+ *
+ * @param name The base name for the XML file.
+ * @return The absolute path to the XML file, or null if failed.
+ */
+internal fun captureViewHierarchy(name: String): String? {
+    logger.infoStep("Starting captureViewHierarchy: name=$name")
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val device = UiDevice.getInstance(instrumentation)
+    val context = instrumentation.targetContext
+
+    val targetDir: File? = when {
+        UiTestEngine.config.screenshotDirectory != null -> File(UiTestEngine.config.screenshotDirectory!!)
+        InstrumentationRegistry.getArguments().getString("additionalTestOutputDir") != null -> 
+            File(InstrumentationRegistry.getArguments().getString("additionalTestOutputDir"))
+        else -> context.externalCacheDir ?: context.cacheDir
+    }
+
+    if (targetDir != null && !targetDir.exists()) targetDir.mkdirs()
+
+    val file = File(targetDir, "$name.xml")
+    return try {
+        device.dumpWindowHierarchy(file)
+        logger.debugStep("View hierarchy dumped to: ${file.absolutePath}")
+        file.absolutePath
+    } catch (e: Exception) {
+        logger.error("Failed to dump window hierarchy", e)
+        null
+    }
+}
+
+/**
  * Robustly opens the system notification shade using UI Automator.
  *
  * This action performs a system-wide swipe from the top of the screen to expand 
