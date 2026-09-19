@@ -1,4 +1,16 @@
-# 🚀 Release Notes - v0.3.0-beta03
+# 🚀 Release Notes - v0.3.0-beta04
+
+## [0.3.0-beta04] - 2026-11-15
+
+### ✨ New Diagnostic Capabilities
+- **Logcat Tail Capture**: Automation failures now automatically capture the last 100 lines of Logcat and save them to a `.log` file (configurable).
+- **View Hierarchy Dumps**: Optionally capture a full XML dump of the Android View hierarchy on failure (`autoCaptureViewHierarchy`), helping debug hybrid or complex layout issues.
+- **Enriched Artifact Reports**: The `AssertionError` message now explicitly lists all generated artifacts (Screenshot, Logcat, and Hierarchy) with their file paths.
+
+### ⚙️ Enhanced Configuration
+- Added `autoCaptureLogcat` (Default: `true`) to `UiTestEngine.Configuration`.
+- Added `autoCaptureViewHierarchy` (Default: `false`) to `UiTestEngine.Configuration`.
+- Added `logcatTailLines` (Default: `100`) to customize the depth of log captures.
 
 ## [0.3.0-beta03] - 2026-11-14
 

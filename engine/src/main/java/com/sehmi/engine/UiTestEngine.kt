@@ -46,6 +46,12 @@ object UiTestEngine {
         val autoDumpSemantics: Boolean = true,
         /** Whether to enable verbose logging for every automation step. */
         val verboseLogging: Boolean = true,
+        /** Whether to automatically capture Logcat tail on failure. */
+        val autoCaptureLogcat: Boolean = true,
+        /** Whether to automatically dump the Android View hierarchy on failure. */
+        val autoCaptureViewHierarchy: Boolean = false,
+        /** The number of Logcat lines to capture on failure. */
+        val logcatTailLines: Int = 100,
     )
 
     private var _config: Configuration = Configuration()

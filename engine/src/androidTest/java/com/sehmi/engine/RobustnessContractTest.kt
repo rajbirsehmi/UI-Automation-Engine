@@ -68,7 +68,7 @@ class RobustnessContractTest : ComposeRuleScope {
 
         assertTrue(error.message!!.contains("Automation Failure: Failing Action"))
         assertTrue(error.message!!.contains("Target Tag: target"))
-        assertTrue(error.message!!.contains("Artifact: "))
+        assertTrue(error.message!!.contains("Artifacts: "))
         assertTrue(error.message!!.contains("FAILURE_"))
         assertTrue(error.message!!.contains("Original Error: Core Error"))
     }

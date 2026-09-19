@@ -2,6 +2,8 @@ package com.sehmi.engine.utils
 
 import android.util.Log
 import com.sehmi.engine.UiTestEngine
+import com.sehmi.engine.actions.captureLogcat
+import com.sehmi.engine.actions.captureViewHierarchy
 import com.sehmi.engine.actions.takeScreenshot
 import com.sehmi.engine.core.ComposeRuleScope
 import com.sehmi.engine.matchers.printUnmergedTree
@@ -141,6 +143,8 @@ internal fun <T> ComposeRuleScope.runRobustly(
         
         // Capture Diagnostics
         var screenshotPath: String? = null
+        var logcatPath: String? = null
+        var hierarchyPath: String? = null
         try {
             if (UiTestEngine.config.autoDumpSemantics) {
                 logger.debugStep("Capturing diagnostics: printUnmergedTree")
@@ -150,6 +154,14 @@ internal fun <T> ComposeRuleScope.runRobustly(
                 logger.debugStep("Capturing diagnostics: takeScreenshot({})", failureName)
                 screenshotPath = takeScreenshot(failureName)
             }
+            if (UiTestEngine.config.autoCaptureLogcat) {
+                logger.debugStep("Capturing diagnostics: captureLogcat({})", failureName)
+                logcatPath = captureLogcat(failureName, UiTestEngine.config.logcatTailLines)
+            }
+            if (UiTestEngine.config.autoCaptureViewHierarchy) {
+                logger.debugStep("Capturing diagnostics: captureViewHierarchy({})", failureName)
+                hierarchyPath = captureViewHierarchy(failureName)
+            }
         } catch (diagError: Throwable) {
             Log.e("ComposeAutomation", "Failed to capture diagnostics: ${diagError.message}")
         }
@@ -157,7 +169,10 @@ internal fun <T> ComposeRuleScope.runRobustly(
         val enrichedMessage = """
             |Automation Failure: $description
             |Target Tag: ${tag ?: "N/A"}
-            |Artifact: ${screenshotPath ?: "$failureName.png"}
+            |Artifacts: 
+            |  - Screenshot: ${screenshotPath ?: "$failureName.png (failed)"}
+            |  - Logcat: ${logcatPath ?: "$failureName.log (skipped/failed)"}
+            |  - Hierarchy: ${hierarchyPath ?: "$failureName.xml (skipped/failed)"}
             |Original Error: ${e.message}
         """.trimMargin()
         
