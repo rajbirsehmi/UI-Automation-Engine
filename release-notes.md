@@ -1,3 +1,16 @@
+# 🚀 Release Notes - v0.3.0-beta06
+
+## [0.3.0-beta06] - 2026-11-20
+
+### 🛡️ Obfuscation & Security
+- **R8 Integration**: Enabled code shrinking and obfuscation for the library's release build.
+- **Consumer ProGuard Rules**: Bundled `consumer-proguard-rules.pro` into the AAR. This ensures library consumers' builds automatically preserve critical entry points (Public APIs, Compose functions, Hilt components) while safely obfuscating internal engine logic.
+
+### 📦 Enhanced Publishing Workflow
+- **Dokka Integration**: Configured Dokka to generate KDoc-based documentation.
+- **New Publication Artifacts**: The Maven publication now includes `-sources.jar` and `-javadoc.jar` artifacts alongside the AAR.
+- **Log4j2 Resilience**: Added ProGuard rules to ensure Log4j2 reflection-based plugin discovery works correctly in obfuscated environments.
+
 # 🚀 Release Notes - v0.3.0-beta05
 
 ## [0.3.0-beta05] - 2026-11-16
