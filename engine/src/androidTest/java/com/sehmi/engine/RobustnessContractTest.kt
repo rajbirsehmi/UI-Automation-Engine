@@ -18,6 +18,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runner.Description
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
@@ -129,6 +130,39 @@ class RobustnessContractTest : ComposeRuleScope {
             assertTagDisplayed("parent")
             assertHasChild("parent", "child")
         }
+    }
+
+    @Test
+    fun testGlobalDiagnosticsCapturedOnStandardAssertionFailure() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val customDir = File(context.cacheDir, "global_diag_test").absolutePath
+        
+        UiTestEngine.configure(
+            UiTestEngine.Configuration(
+                screenshotDirectory = customDir,
+                autoCaptureScreenshots = true,
+                autoDumpSemantics = false
+            )
+        )
+
+        val dir = File(customDir)
+        dir.deleteRecursively()
+        dir.mkdirs()
+
+        val watcher = FailureDiagnosticWatcher()
+        watcher.starting(Description.createTestDescription(this.javaClass, "mockTest"))
+        
+        // Manually trigger failure to simulate TestWatcher behavior
+        watcher.failed(RuntimeException("Simulated Failure"), Description.createTestDescription(this.javaClass, "mockTest"))
+        
+        assertTrue("Diagnostics flag should be set", UiTestEngine.wasDiagnosticsCaptured)
+        val files = dir.listFiles()
+        assertTrue("Screenshot should exist in custom dir", 
+            files?.any { it.name.contains("GLOBAL_FAILURE_") && it.name.endsWith(".png") } == true)
+        
+        // Cleanup
+        dir.deleteRecursively()
+        UiTestEngine.configure(UiTestEngine.Configuration())
     }
 
     @Test

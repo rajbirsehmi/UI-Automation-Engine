@@ -1,0 +1,8 @@
+jdk:
+  - openjdk17
+
+before_install:
+  - chmod +x gradlew
+
+install:
+  - ./gradlew publishToMavenLocal -Pgroup=com.github.rajbirsehmi.UI-Automation-Engine -Pversion=0.3.0-beta03

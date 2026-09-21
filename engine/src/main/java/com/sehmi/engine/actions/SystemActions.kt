@@ -152,12 +152,44 @@ fun ComposeRuleScope.waitForSystemWindow(packageName: String, timeoutMillis: Lon
 }
 
 /**
+ * Resolves a writable directory for saving diagnostic artifacts.
+ */
+private fun getDiagnosticDirectory(): File? {
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val context = instrumentation.targetContext
+
+    val configDir = UiTestEngine.config.screenshotDirectory
+    val additionalOutputDir = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
+
+    val candidates = listOfNotNull(
+        configDir?.let { File(it) },
+        additionalOutputDir?.let { File(it) },
+        context.externalCacheDir,
+        context.cacheDir
+    )
+
+    for (candidate in candidates) {
+        try {
+            if (!candidate.exists()) {
+                if (candidate.mkdirs()) return candidate
+            } else if (candidate.canWrite()) {
+                return candidate
+            }
+        } catch (e: Exception) {
+            // Log at debug level to avoid noise
+            logger.debug("Candidate directory ${candidate.absolutePath} not writable: ${e.message}")
+        }
+    }
+    return null
+}
+
+/**
  * Captures a screenshot of the current device screen and saves it as a PNG file.
  *
- * The screenshot is saved to one of the following locations (in order of priority):
- * 1. [UiTestEngine.config.screenshotDirectory] if set.
- * 2. The `additionalTestOutputDir` instrumentation argument if provided (standard for Gradle).
- * 3. The app's external cache directory.
+ * The engine attempts to find a valid storage location in the following order:
+ * 1. [UiTestEngine.config.screenshotDirectory] if set and writable.
+ * 2. The `additionalTestOutputDir` instrumentation argument if writable.
+ * 3. The app's external cache directory if available and writable.
  * 4. The app's internal cache directory.
  *
  * @param name The base name for the screenshot file (excluding extension).
@@ -167,37 +199,33 @@ internal fun takeScreenshot(name: String): String? {
     logger.infoStep("Starting takeScreenshot: name=$name")
     val instrumentation = InstrumentationRegistry.getInstrumentation()
     val device = UiDevice.getInstance(instrumentation)
-    val context = instrumentation.targetContext
 
-    // Resolve storage directory
-    val configDir: String? = UiTestEngine.config.screenshotDirectory
-    val additionalOutputDir: String? = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
-
-    val targetDir: File? = when {
-        configDir != null -> File(configDir)
-        additionalOutputDir != null -> File(additionalOutputDir)
-        else -> context.externalCacheDir ?: context.cacheDir
-    }
-
-    if (targetDir != null && !targetDir.exists()) {
-        targetDir.mkdirs()
+    val targetDir = getDiagnosticDirectory()
+    if (targetDir == null) {
+        logger.error("No writable directory found for screenshot capture.")
+        return null
     }
 
     val file = File(targetDir, "$name.png")
     val absolutePath = file.absolutePath
-    logger.debugStep("Saving screenshot to: $absolutePath")
+    logger.debugStep("Attempting to save screenshot to: $absolutePath")
 
-    val success = device.takeScreenshot(file)
-    return if (success) {
-        logger.debugStep("takeScreenshot completed")
-        // Report to instrumentation metadata
-        val status = Bundle().apply {
-            putString("screenshot_path", absolutePath)
+    return try {
+        val success = device.takeScreenshot(file)
+        if (success) {
+            logger.debugStep("takeScreenshot completed successfully")
+            // Report to instrumentation metadata
+            val status = Bundle().apply {
+                putString("screenshot_path", absolutePath)
+            }
+            instrumentation.sendStatus(0, status)
+            absolutePath
+        } else {
+            logger.error("UiDevice.takeScreenshot returned false for $absolutePath")
+            null
         }
-        instrumentation.sendStatus(0, status)
-        absolutePath
-    } else {
-        logger.error("takeScreenshot failed")
+    } catch (e: Exception) {
+        logger.error("Exception during screenshot capture: ${e.message}", e)
         null
     }
 }
@@ -211,21 +239,11 @@ internal fun takeScreenshot(name: String): String? {
  */
 internal fun captureLogcat(name: String, tailLines: Int): String? {
     logger.infoStep("Starting captureLogcat: name=$name, tailLines=$tailLines")
-    val instrumentation = InstrumentationRegistry.getInstrumentation()
-    val device = UiDevice.getInstance(instrumentation)
-    val context = instrumentation.targetContext
-
-    val targetDir: File? = when {
-        UiTestEngine.config.screenshotDirectory != null -> File(UiTestEngine.config.screenshotDirectory!!)
-        InstrumentationRegistry.getArguments().getString("additionalTestOutputDir") != null -> 
-            File(InstrumentationRegistry.getArguments().getString("additionalTestOutputDir"))
-        else -> context.externalCacheDir ?: context.cacheDir
-    }
-
-    if (targetDir != null && !targetDir.exists()) targetDir.mkdirs()
-
+    val targetDir = getDiagnosticDirectory() ?: return null
     val file = File(targetDir, "$name.log")
+
     return try {
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val logs = device.executeShellCommand("logcat -t $tailLines")
         file.writeText(logs)
         logger.debugStep("Logcat captured to: ${file.absolutePath}")
@@ -244,21 +262,11 @@ internal fun captureLogcat(name: String, tailLines: Int): String? {
  */
 internal fun captureViewHierarchy(name: String): String? {
     logger.infoStep("Starting captureViewHierarchy: name=$name")
-    val instrumentation = InstrumentationRegistry.getInstrumentation()
-    val device = UiDevice.getInstance(instrumentation)
-    val context = instrumentation.targetContext
-
-    val targetDir: File? = when {
-        UiTestEngine.config.screenshotDirectory != null -> File(UiTestEngine.config.screenshotDirectory!!)
-        InstrumentationRegistry.getArguments().getString("additionalTestOutputDir") != null -> 
-            File(InstrumentationRegistry.getArguments().getString("additionalTestOutputDir"))
-        else -> context.externalCacheDir ?: context.cacheDir
-    }
-
-    if (targetDir != null && !targetDir.exists()) targetDir.mkdirs()
-
+    val targetDir = getDiagnosticDirectory() ?: return null
     val file = File(targetDir, "$name.xml")
+
     return try {
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         device.dumpWindowHierarchy(file)
         logger.debugStep("View hierarchy dumped to: ${file.absolutePath}")
         file.absolutePath

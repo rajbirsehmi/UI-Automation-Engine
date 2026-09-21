@@ -270,10 +270,13 @@ The engine's "secret sauce." Every action is wrapped in this.
 *   **On Failure**:
     1.  Logs the failure with a human-readable description.
     2.  Dumps the semantics tree to Logcat.
-    3.  Takes a screenshot named `FAILURE_<timestamp>.png`.
+    3.  Takes a screenshot named `FAILURE_<timestamp>.png` (using robust multi-path resolution).
     4.  Captures a Logcat tail to `FAILURE_<timestamp>.log`.
     5.  (Optional) Dumps the View hierarchy to `FAILURE_<timestamp>.xml`.
     6.  Throws an `AssertionError` with all this context attached.
+
+### `FailureDiagnosticWatcher`
+A global JUnit `TestWatcher` that serves as a fallback for `runRobustly`. It ensures that *any* test failure triggers a diagnostic capture, even if the engine's robustness pipeline was not directly involved. It automatically skips capture if `runRobustly` already completed it for the current failure.
 
 ### `waitUntil`
 A polling utility used internally for flakiness resilience.

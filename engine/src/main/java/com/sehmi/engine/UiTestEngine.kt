@@ -4,12 +4,17 @@ import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
+import com.sehmi.engine.actions.captureLogcat
+import com.sehmi.engine.actions.captureViewHierarchy
+import com.sehmi.engine.actions.takeScreenshot
 import com.sehmi.engine.core.ComposeRuleScope
+import com.sehmi.engine.matchers.printUnmergedTree
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import android.util.Log
 
 /**
  * Global configuration and entry point for the UI Automation Engine.
@@ -21,6 +26,7 @@ object UiTestEngine {
     private val logger: Logger = LogManager.getLogger("UiTestEngine")
     private val rule = ThreadLocal<ComposeTestRule>()
     private val isRobustContext = ThreadLocal.withInitial { false }
+    private val diagnosticsCaptured = ThreadLocal.withInitial { false }
 
     /**
      * Returns whether the current thread is already executing within a robust 
@@ -29,6 +35,14 @@ object UiTestEngine {
     internal var inRobustContext: Boolean
         get() = isRobustContext.get() ?: false
         set(value) = isRobustContext.set(value)
+
+    /**
+     * Tracks whether diagnostics have already been captured for the current failure.
+     * Internal use only.
+     */
+    internal var wasDiagnosticsCaptured: Boolean
+        get() = diagnosticsCaptured.get() ?: false
+        set(value) = diagnosticsCaptured.set(value)
 
     /**
      * Configuration settings for the engine.
@@ -168,12 +182,64 @@ object UiTestEngine {
 }
 
 /**
+ * A JUnit Rule that automatically captures diagnostics on test failure.
+ */
+class FailureDiagnosticWatcher : TestWatcher() {
+    public override fun starting(description: Description) {
+        UiTestEngine.wasDiagnosticsCaptured = false
+    }
+
+    public override fun failed(e: Throwable, description: Description) {
+        if (UiTestEngine.wasDiagnosticsCaptured) return
+
+        val timestamp = System.currentTimeMillis()
+        val failureName = "GLOBAL_FAILURE_${description.methodName}_$timestamp"
+        
+        Log.e("ComposeAutomation", "Test failed: ${description.displayName}. Capturing diagnostics...")
+        
+        try {
+            if (UiTestEngine.config.autoDumpSemantics) {
+                // We can't easily access the rule here without it being set, 
+                // but it should be set in the current thread.
+                try {
+                    val scope = object : ComposeRuleScope {
+                        override val uiTestEngineRule: ComposeTestRule get() = UiTestEngine.uiTestEngineRule
+                    }
+                    scope.printUnmergedTree()
+                } catch (t: Throwable) {
+                    Log.w("ComposeAutomation", "Failed to dump semantics: ${t.message}")
+                }
+            }
+            if (UiTestEngine.config.autoCaptureScreenshots) {
+                takeScreenshot(failureName)
+            }
+            if (UiTestEngine.config.autoCaptureLogcat) {
+                captureLogcat(failureName, UiTestEngine.config.logcatTailLines)
+            }
+            if (UiTestEngine.config.autoCaptureViewHierarchy) {
+                captureViewHierarchy(failureName)
+            }
+            UiTestEngine.wasDiagnosticsCaptured = true
+        } catch (diagError: Throwable) {
+            Log.e("ComposeAutomation", "Failed to capture global diagnostics: ${diagError.message}")
+        }
+    }
+}
+
+/**
  * A JUnit Rule that automatically registers the [ComposeTestRule] with [UiTestEngine].
  *
  * Internal use only.
  */
 @Suppress("unused")
 class UiTestEngineRule(private val composeTestRule: ComposeTestRule) : TestWatcher() {
+    private val diagnosticWatcher = FailureDiagnosticWatcher()
+
+    override fun apply(base: Statement, description: Description): Statement {
+        // Wrap the base statement with both this watcher and the diagnostic watcher
+        return diagnosticWatcher.apply(super.apply(base, description), description)
+    }
+
     override fun starting(description: Description) {
         UiTestEngine.setComposeRule(composeTestRule)
     }
@@ -189,12 +255,14 @@ class UiTestEngineRule(private val composeTestRule: ComposeTestRule) : TestWatch
 class UiTestEngineContentRule(
     private val baseRule: ComposeContentTestRule
 ) : ComposeContentTestRule by baseRule {
+    private val diagnosticWatcher = FailureDiagnosticWatcher()
+
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
                 UiTestEngine.setComposeRule(baseRule)
                 try {
-                    baseRule.apply(base, description).evaluate()
+                    diagnosticWatcher.apply(baseRule.apply(base, description), description).evaluate()
                 } finally {
                     UiTestEngine.clearComposeRule()
                 }

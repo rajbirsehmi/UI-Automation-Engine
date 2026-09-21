@@ -145,34 +145,40 @@ internal fun <T> ComposeRuleScope.runRobustly(
         var screenshotPath: String? = null
         var logcatPath: String? = null
         var hierarchyPath: String? = null
-        try {
-            if (UiTestEngine.config.autoDumpSemantics) {
-                logger.debugStep("Capturing diagnostics: printUnmergedTree")
-                printUnmergedTree(tag)
+        
+        if (!UiTestEngine.wasDiagnosticsCaptured) {
+            try {
+                if (UiTestEngine.config.autoDumpSemantics) {
+                    logger.debugStep("Capturing diagnostics: printUnmergedTree")
+                    printUnmergedTree(tag)
+                }
+                if (UiTestEngine.config.autoCaptureScreenshots) {
+                    logger.debugStep("Capturing diagnostics: takeScreenshot({})", failureName)
+                    screenshotPath = takeScreenshot(failureName)
+                }
+                if (UiTestEngine.config.autoCaptureLogcat) {
+                    logger.debugStep("Capturing diagnostics: captureLogcat({})", failureName)
+                    logcatPath = captureLogcat(failureName, UiTestEngine.config.logcatTailLines)
+                }
+                if (UiTestEngine.config.autoCaptureViewHierarchy) {
+                    logger.debugStep("Capturing diagnostics: captureViewHierarchy({})", failureName)
+                    hierarchyPath = captureViewHierarchy(failureName)
+                }
+                UiTestEngine.wasDiagnosticsCaptured = true
+            } catch (diagError: Throwable) {
+                Log.e("ComposeAutomation", "Failed to capture diagnostics: ${diagError.message}")
             }
-            if (UiTestEngine.config.autoCaptureScreenshots) {
-                logger.debugStep("Capturing diagnostics: takeScreenshot({})", failureName)
-                screenshotPath = takeScreenshot(failureName)
-            }
-            if (UiTestEngine.config.autoCaptureLogcat) {
-                logger.debugStep("Capturing diagnostics: captureLogcat({})", failureName)
-                logcatPath = captureLogcat(failureName, UiTestEngine.config.logcatTailLines)
-            }
-            if (UiTestEngine.config.autoCaptureViewHierarchy) {
-                logger.debugStep("Capturing diagnostics: captureViewHierarchy({})", failureName)
-                hierarchyPath = captureViewHierarchy(failureName)
-            }
-        } catch (diagError: Throwable) {
-            Log.e("ComposeAutomation", "Failed to capture diagnostics: ${diagError.message}")
+        } else {
+            logger.debugStep("Diagnostics already captured for this failure, skipping redundant capture.")
         }
 
         val enrichedMessage = """
             |Automation Failure: $description
             |Target Tag: ${tag ?: "N/A"}
-            |Artifacts: 
-            |  - Screenshot: ${screenshotPath ?: "$failureName.png (failed)"}
-            |  - Logcat: ${logcatPath ?: "$failureName.log (skipped/failed)"}
-            |  - Hierarchy: ${hierarchyPath ?: "$failureName.xml (skipped/failed)"}
+            |Diagnostic Artifacts: 
+            |  - Screenshot: ${screenshotPath ?: "See log for path (already captured or failed)"}
+            |  - Logcat: ${logcatPath ?: "See log for path"}
+            |  - Hierarchy: ${hierarchyPath ?: "See log for path"}
             |Original Error: ${e.message}
         """.trimMargin()
         

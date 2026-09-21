@@ -130,10 +130,10 @@ Every extension method in the engine (like `clickOnTag`, `enterText`, `swipe`) i
 Debugging failed CI runs is often impossible without visual feedback. The Engine provides:
 
 ### Automatic Screenshots
-On every `AssertionError`, a high-resolution screenshot is saved to the artifacts directory: `FAILURE_<timestamp>.png`.
+On every `AssertionError` (or any test failure), a high-resolution screenshot is saved to the artifacts directory. The engine now uses a robust multi-path fallback system to ensure screenshots are saved even in restricted environments.
 
 ### Logcat & Hierarchy Dumps
-The engine automatically captures the last 100 lines of Logcat (`.log`) and can optionally dump the Android View hierarchy (`.xml`) to provide full context of the system state during failure.
+The engine automatically captures the last 100 lines of Logcat (`.log`) and can optionally dump the Android View hierarchy (`.xml`). A global `TestWatcher` ensures these are captured even for failures outside the `runRobustly` pipeline.
 
 ### Semantics Tree Dump
 The engine dumps the entire **unmerged semantics tree** to Logcat under the `ComposeAutomation` tag. This reveals the exact state of the UI at the microsecond of failure.
@@ -268,7 +268,7 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "0.3.0-beta04"
+engine = "0.3.0-beta05"
 
 [libraries]
 uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "robot-testing-engine", version.ref = "engine" }
