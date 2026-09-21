@@ -1,3 +1,29 @@
+# 🚀 Release Notes - v0.3.0-rc01
+
+## [0.3.0-rc01] - 2026-11-22
+
+### 🏗 Dedicated Compose Architecture
+- **Pure Compose Focus**: Removed the legacy Espresso layer to reduce library footprint and focus strictly on high-performance Jetpack Compose automation.
+- **Enhanced Robot Scope**: Expanded `ComposeRuleScope` with deep hierarchy navigation and specialized semantics matchers.
+
+### ✨ Compose Power-ups
+- **Hierarchy Finders**: Added `clickFirstChild`, `clickLastChild`, and `clickChildAtIndex` to target nodes by position.
+- **Relationship Matchers**: Introduced `hasAnyDescendant`, `hasAnyAncestor`, and `hasAnySibling` for contextual element discovery.
+- **State Matchers**: Added first-class support for `isDialog`, `isPopup`, `isHeading`, and `hasStateDescription`.
+- **Advanced Gestures**: Implemented `mouseClick` (simulating left/right/center clicks for desktop/large-screen tests) and `rotaryScroll` (first-class support for Wear OS bezel/crown input).
+- **Specialized Wait Conditions**: Added robust polling for node states: `waitUntilExists`, `waitUntilDoesNotExist`, and `waitUntilNodeCount`.
+
+### 📱 System & Device Control
+- **`onDevice { ... }` Scope**: New DSL block for hardware and OS-level interactions using UI Automator.
+- **Hardware Keys**: Robust simulation for `pressHome`, `pressBack`, `pressRecentApps`, and `pressDPadCenter`.
+- **Device Management**: Added `wakeUp`, `sleep`, `unlock` (keyguard dismissal), and `setOrientation` controls.
+- **Shell Command Execution**: Exposed `executeShell(command)` for high-power system interactions within the robot pattern.
+- **Notification Shade Control**: Added `clearNotifications` and improved shade expansion reliability.
+
+### 🛡 Robustness & Interop
+- **Auto-Interop**: Introduced `testTagsAsResourceId` configuration to automatically expose Compose test tags to UI Automator, facilitating cross-backend interactions.
+- **Enhanced Lint Rules**: `DirectUiTestApiUsage` now guards against direct UI Automator usage in tests, ensuring all system interactions benefit from the engine's diagnostic pipeline.
+
 # 🚀 Release Notes - v0.3.0-beta06
 
 ## [0.3.0-beta06] - 2026-11-20

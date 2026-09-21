@@ -1,5 +1,5 @@
 [versions]
-engine = "0.3.0-beta03"
+engine = "0.3.0-rc01"
 agp = "9.4.0"
 composeBom = "2026.09.00"
 kotlin = "2.4.20"

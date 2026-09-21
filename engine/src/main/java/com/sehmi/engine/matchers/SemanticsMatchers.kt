@@ -3,10 +3,7 @@ package com.sehmi.engine.matchers
 import android.util.Log
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.printToLog
+import androidx.compose.ui.test.*
 import com.sehmi.engine.core.ComposeRuleScope
 import com.sehmi.engine.utils.*
 
@@ -52,6 +49,26 @@ object SemanticsMatchers {
     fun isTab(): SemanticsMatcher = hasRole(Role.Tab)
 
     /**
+     * Matches a semantics node that is a Dialog.
+     */
+    fun isDialog(): SemanticsMatcher = SemanticsMatcher.expectValue(SemanticsProperties.IsDialog, Unit)
+
+    /**
+     * Matches a semantics node that is a Popup.
+     */
+    fun isPopup(): SemanticsMatcher = SemanticsMatcher.expectValue(SemanticsProperties.IsPopup, Unit)
+
+    /**
+     * Matches a semantics node that has a "Heading" property.
+     */
+    fun isHeading(): SemanticsMatcher = SemanticsMatcher.expectValue(SemanticsProperties.Heading, Unit)
+
+    /**
+     * Matches a semantics node with a specific state description.
+     */
+    fun hasStateDescription(text: String): SemanticsMatcher = SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, text)
+
+    /**
      * Matches a semantics node whose content description satisfies the given [regex].
      *
      * Useful for matching nodes with dynamic or partially known descriptions.
@@ -64,6 +81,27 @@ object SemanticsMatchers {
             val description = node.config.getOrElse(SemanticsProperties.ContentDescription) { emptyList() }
             description.any { it.contains(Regex(regex)) }
         }
+    }
+
+    /**
+     * Matches a node that has at least one descendant matching the given [matcher].
+     */
+    fun hasAnyDescendant(matcher: SemanticsMatcher): SemanticsMatcher {
+        return androidx.compose.ui.test.hasAnyDescendant(matcher)
+    }
+
+    /**
+     * Matches a node that has at least one ancestor matching the given [matcher].
+     */
+    fun hasAnyAncestor(matcher: SemanticsMatcher): SemanticsMatcher {
+        return androidx.compose.ui.test.hasAnyAncestor(matcher)
+    }
+
+    /**
+     * Matches a node that has a sibling matching the given [matcher].
+     */
+    fun hasAnySibling(matcher: SemanticsMatcher): SemanticsMatcher {
+        return androidx.compose.ui.test.hasAnySibling(matcher)
     }
 }
 
@@ -88,5 +126,23 @@ internal fun ComposeRuleScope.printUnmergedTree(testTag: String? = null) {
         }
     } catch (e: Throwable) {
         Log.e(tag, "Failed to print semantics tree: ${e.message}")
+    }
+}
+
+/**
+ * Returns the unmerged semantics tree as a formatted string.
+ *
+ * @param testTag Optional tag to focus the dump on a specific subtree.
+ * @return The semantics tree as a string, or an error message if capture fails.
+ */
+fun ComposeRuleScope.dumpSemantics(testTag: String? = null): String {
+    return try {
+        if (testTag != null) {
+            uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree = true).printToString()
+        } else {
+            uiTestEngineRule.onRoot(useUnmergedTree = true).printToString()
+        }
+    } catch (e: Throwable) {
+        "Failed to dump semantics: ${e.message}"
     }
 }

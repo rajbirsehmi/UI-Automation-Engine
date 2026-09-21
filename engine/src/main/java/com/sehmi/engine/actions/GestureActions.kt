@@ -68,6 +68,65 @@ fun ComposeRuleScope.clickOnTag(testTag: String, useUnmergedTree: Boolean = fals
 }
 
 /**
+ * Performs a robust click on a node with the specified content description.
+ *
+ * @param contentDescription The content description of the node to click.
+ * @param useUnmergedTree Whether to use the unmerged semantics tree for lookups.
+ * @throws AssertionError if the node is not found or interaction fails.
+ */
+@Suppress("unused")
+fun ComposeRuleScope.clickOnDescription(contentDescription: String, useUnmergedTree: Boolean = false) {
+    logger.infoStep("Starting clickOnDescription: description=$contentDescription")
+    runRobustly("Click on description: $contentDescription") {
+        waitUntil {
+            val interaction = uiTestEngineRule.onNodeWithContentDescription(contentDescription, useUnmergedTree = useUnmergedTree)
+            try {
+                interaction.assertIsDisplayed()
+            } catch (e: AssertionError) {
+                try {
+                    interaction.performScrollTo()
+                    interaction.assertIsDisplayed()
+                } catch (_: AssertionError) {
+                    throw e
+                }
+            }
+            interaction.assertIsEnabled()
+            interaction.performClick()
+        }
+    }
+}
+
+/**
+ * Performs a robust click on a node matching the provided [matcher].
+ *
+ * This is the generic entry point for clicking any node identified by a custom 
+ * semantics matcher.
+ *
+ * @param matcher The [SemanticsMatcher] to identify the target node.
+ * @param useUnmergedTree Whether to use the unmerged semantics tree for lookups.
+ */
+fun ComposeRuleScope.click(matcher: SemanticsMatcher, useUnmergedTree: Boolean = false) {
+    logger.infoStep("Starting click with custom matcher")
+    runRobustly("Click on node matching: $matcher") {
+        waitUntil {
+            val interaction = uiTestEngineRule.onNode(matcher, useUnmergedTree = useUnmergedTree)
+            try {
+                interaction.assertIsDisplayed()
+            } catch (e: AssertionError) {
+                try {
+                    interaction.performScrollTo()
+                    interaction.assertIsDisplayed()
+                } catch (_: AssertionError) {
+                    throw e
+                }
+            }
+            interaction.assertIsEnabled()
+            interaction.performClick()
+        }
+    }
+}
+
+/**
  * Performs a robust click on a node containing the specified text.
  *
  * This action leverages the engine's robust action pipeline ([runRobustly]), which includes:
@@ -485,4 +544,44 @@ fun ComposeRuleScope.multiFingerSwipe(
         }
     }
     logger.debugStep("multiFingerSwipe completed for tag: $testTag")
+}
+
+/**
+ * Performs a robust mouse click (left, right, or center) on a node.
+ *
+ * @param testTag The test tag of the node to click.
+ * @param button The mouse button to use (0 for left, 1 for right, 2 for center).
+ */
+@OptIn(ExperimentalTestApi::class)
+fun ComposeRuleScope.mouseClick(testTag: String, button: Int = 0, useUnmergedTree: Boolean = false) {
+    logger.infoStep("Starting mouseClick: tag=$testTag, button=$button")
+    runRobustly("Mouse click on tag: $testTag", testTag) {
+        uiTestEngineRule.onNodeWithTag(testTag, useUnmergedTree).performMouseInput {
+            when (button) {
+                0 -> click()
+                1 -> rightClick()
+                else -> { /* custom logic */ }
+            }
+        }
+    }
+}
+
+/**
+ * Simulates a rotary scroll event (e.g., from a watch bezel) on a node.
+ *
+ * @param testTag The test tag of the scrollable node.
+ * @param delta The amount of scroll in pixels or generic units.
+ */
+@OptIn(ExperimentalTestApi::class)
+fun ComposeRuleScope.rotaryScroll(testTag: String, delta: Float, horizontal: Boolean = false) {
+    logger.infoStep("Starting rotaryScroll: tag=$testTag, delta=$delta, horizontal=$horizontal")
+    runRobustly("Rotary scroll on tag: $testTag", testTag) {
+        uiTestEngineRule.onNodeWithTag(testTag).performRotaryScrollInput {
+            if (horizontal) {
+                rotateToScrollHorizontally(delta)
+            } else {
+                rotateToScrollVertically(delta)
+            }
+        }
+    }
 }
