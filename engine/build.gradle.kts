@@ -15,13 +15,13 @@ android {
     defaultConfig {
         minSdk = 30
         resourcePrefix = "engine_"
-        consumerProguardFiles("consumer-rules.keep")
+        consumerProguardFiles("consumer-proguard-rules.pro")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -60,6 +60,7 @@ android {
         multipleVariants("engine") {
             allVariants()
             withSourcesJar()
+            withJavadocJar()
         }
     }
 
@@ -132,7 +133,7 @@ publishing {
         register<MavenPublication>("maven") {
             groupId = "com.github.rajbirsehmi.UI-Automation-Engine"
             artifactId = "robot-testing-engine"
-            version = "0.3.0-beta05"
+            version = "0.3.0-beta06"
 
             afterEvaluate {
                 from(components["engine"])
