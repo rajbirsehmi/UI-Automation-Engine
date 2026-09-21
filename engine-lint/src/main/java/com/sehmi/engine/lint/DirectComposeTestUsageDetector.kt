@@ -7,9 +7,12 @@ import org.jetbrains.uast.*
 class DirectComposeTestUsageDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String> = listOf(
+        // Compose
         "onNodeWithTag", "onNodeWithText", "onNodeWithContentDescription",
         "performClick", "performTextInput", "performScrollTo",
-        "assertIsDisplayed", "assertExists", "assertDoesNotExist"
+        "assertIsDisplayed", "assertExists", "assertDoesNotExist",
+        // UI Automator
+        "findObject", "wait", "pressBack", "pressHome"
     )
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
@@ -19,8 +22,7 @@ class DirectComposeTestUsageDetector : Detector(), SourceCodeScanner {
         // Allowed in com.sehmi.engine.* package (the engine itself)
         if (packageName.startsWith("com.sehmi.engine")) return
 
-        // Detect forbidden usage in test sources. We also check the path to support lint unit tests 
-        // where isTestSource might not be correctly set.
+        // Detect forbidden usage in test sources.
         if (!context.isTestSource && !context.file.path.contains("test", ignoreCase = true)) return
 
         val methodName = method.name
@@ -28,11 +30,11 @@ class DirectComposeTestUsageDetector : Detector(), SourceCodeScanner {
         
         val isComposeTestApi = (evaluator.getPackage(method)?.qualifiedName?.startsWith("androidx.compose.ui.test") == true) ||
                                (method.containingClass?.qualifiedName?.startsWith("androidx.compose.ui.test") == true)
+        
+        val isAutomatorApi = (evaluator.getPackage(method)?.qualifiedName?.startsWith("androidx.test.uiautomator") == true) ||
+                              (method.containingClass?.qualifiedName?.startsWith("androidx.test.uiautomator") == true)
 
-        val isEspressoApi = (evaluator.getPackage(method)?.qualifiedName?.startsWith("androidx.test.espresso") == true) ||
-                             (method.containingClass?.qualifiedName?.startsWith("androidx.test.espresso") == true)
-
-        if (isComposeTestApi || isEspressoApi) {
+        if (isComposeTestApi || isAutomatorApi) {
             val parent = node.uastParent
             if (parent is UQualifiedReferenceExpression && parent.receiver == node) {
                 // Skip receivers, wait for selectors to handle the whole chain
@@ -50,7 +52,7 @@ class DirectComposeTestUsageDetector : Detector(), SourceCodeScanner {
                 ISSUE,
                 reportNode,
                 context.getLocation(reportNode),
-                "UI automation actions must use the high-level com.sehmi.engine DSL extensions instead of direct Compose/Espresso testing APIs.",
+                "UI automation actions must use the high-level com.sehmi.engine DSL extensions instead of direct testing APIs to ensure robustness and diagnostic capture.",
                 fix,
             )
         }
@@ -84,6 +86,14 @@ class DirectComposeTestUsageDetector : Detector(), SourceCodeScanner {
                         .build()
                 } else null
             }
+            "findObject" -> {
+                LintFix.create()
+                    .name("Wrap with onDevice { ... }")
+                    .replace()
+                    .all()
+                    .with("onDevice { $source }")
+                    .build()
+            }
             else -> null
         }
     }
@@ -92,8 +102,8 @@ class DirectComposeTestUsageDetector : Detector(), SourceCodeScanner {
         @JvmField
         val ISSUE = Issue.create(
             id = "DirectUiTestApiUsage",
-            briefDescription = "Forbidden direct usage of Compose or Espresso testing APIs",
-            explanation = "UI automation actions must use the high-level com.sehmi.engine DSL extensions instead of direct Compose/Espresso testing APIs.",
+            briefDescription = "Forbidden direct usage of Compose or UI Automator testing APIs",
+            explanation = "UI automation actions must use the high-level com.sehmi.engine DSL extensions instead of direct testing APIs to ensure robustness and diagnostic capture.",
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,

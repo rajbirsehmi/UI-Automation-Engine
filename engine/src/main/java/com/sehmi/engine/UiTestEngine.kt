@@ -15,6 +15,7 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import android.util.Log
+import androidx.compose.ui.platform.ComposeView
 
 /**
  * Global configuration and entry point for the UI Automation Engine.
@@ -50,6 +51,8 @@ object UiTestEngine {
     data class Configuration(
         /** The default timeout for robust actions in milliseconds. */
         val defaultTimeoutMillis: Long = 5000L,
+        /** The timeout for UI Automator actions in milliseconds. */
+        val automatorTimeoutMillis: Long = 10000L,
         /** The polling interval for wait operations in milliseconds. */
         val pollIntervalMillis: Long = 100L,
         /** Whether to automatically capture screenshots on failure. */
@@ -66,6 +69,8 @@ object UiTestEngine {
         val autoCaptureViewHierarchy: Boolean = false,
         /** The number of Logcat lines to capture on failure. */
         val logcatTailLines: Int = 100,
+        /** Whether to enable test tags as resource IDs for UI Automator interop. */
+        val testTagsAsResourceId: Boolean = true,
     )
 
     private var _config: Configuration = Configuration()

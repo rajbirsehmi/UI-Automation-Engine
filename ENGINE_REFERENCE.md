@@ -5,17 +5,20 @@ This document provides an exhaustive reference for the `:engine` module, detaili
 ---
 
 ## Table of Contents
-1. [Core Architecture](#core-architecture)
-2. [Gestures & Interactions](#gestures--interactions)
-3. [Text & Focus Actions](#text--focus-actions)
-4. [Scrolling & Navigation](#scrolling--navigation)
-5. [System Actions](#system-actions)
-6. [Time & Clock Control](#time--clock-control)
-7. [Assertions](#assertions)
-8. [Advanced "Escape Hatches"](#advanced-escape-hatches)
-9. [Hilt Integration](#hilt-integration)
-10. [Diagnostics & Utilities](#diagnostics--utilities)
-11. [Static Analysis (Lint Rules)](#static-analysis-lint-rules)
+1. [Global Configuration](#global-configuration)
+2. [Core Architecture](#core-architecture)
+3. [Gestures & Interactions](#gestures--interactions)
+4. [Text & Focus Actions](#text--focus-actions)
+5. [Scrolling & Navigation](#scrolling--navigation)
+6. [Hierarchy & Relationship Actions](#hierarchy--relationship-actions)
+7. [System Actions](#system-actions)
+8. [Accessibility Actions](#accessibility-actions)
+9. [Time & Clock Control](#time--clock-control)
+10. [Assertions](#assertions)
+11. [Advanced "Escape Hatches"](#advanced-escape-hatches)
+12. [Hilt Integration](#hilt-integration)
+13. [Diagnostics & Utilities](#diagnostics--utilities)
+14. [Static Analysis (Lint Rules)](#static-analysis-lint-rules)
 
 ---
 
@@ -54,15 +57,18 @@ fun setupEngine() {
 | `logcatTailLines` | `100` | Number of Logcat lines to capture on failure. |
 | `verboseLogging` | `true` | Enables high-level "Starting/Completed" logs for every step. |
 
-### `UiTestEngine.enablePermission(permission, packageName)`
+### `UiTestEngine.enablePermission(permission, packageName = null)`
 Programmatically grants a runtime permission directly to the app under test using `UiAutomation` without manual UI clicks.
 
 #### Example Usage:
 ```kotlin
 @Test
 fun testNotificationFeature() {
+    // Grant for target package automatically
     UiTestEngine.enablePermission("android.permission.POST_NOTIFICATIONS")
-    // Run test logic safely with the permission granted
+    
+    // Or specify a package
+    UiTestEngine.enablePermission("android.permission.CAMERA", "com.example.otherapp")
 }
 ```
 
@@ -110,6 +116,8 @@ All gesture actions are robust: they wait for idle, automatically scroll to the 
 | :--- | :--- |
 | `clickOnTag(tag)` | Performs a robust click on a node with the specified test tag. |
 | `clickOnText(text)` | Performs a robust click on a node containing the specified text. |
+| `clickOnDescription(desc)`| Performs a robust click on a node with the specified content description. |
+| `click(matcher)` | Performs a robust click on a node matching a custom `SemanticsMatcher`. |
 | `longClickTag(tag)` | Performs a long-press on a node by tag. |
 | `longClickText(text)` | Performs a long-press on a node by text content. |
 | `doubleClickTag(tag)` | Performs a double-tap on a node by tag. |
@@ -119,6 +127,8 @@ All gesture actions are robust: they wait for idle, automatically scroll to the 
 | `rotate(tag, degrees)` | Performs a two-finger rotation gesture around the node center. |
 | `multiFingerSwipe(tag, fingers, direction)` | Performs a simultaneous swipe with 2-4 fingers. |
 | `clickAtOffset(tag, x, y)` | Clicks at a percentage-based offset (0.0 to 1.0) within a node. |
+| `mouseClick(tag, button)` | Simulates a mouse click (left/right/center) for desktop/large screen testing. |
+| `rotaryScroll(tag, delta)` | Simulates a rotary input event (e.g., watch bezel) on a node. |
 
 ---
 
@@ -148,7 +158,19 @@ All gesture actions are robust: they wait for idle, automatically scroll to the 
 
 ---
 
-## System Actions
+## Hierarchy & Relationship Actions
+
+These actions allow targeting nodes based on their position in the semantics tree relative to other nodes.
+
+| Method | Description |
+| :--- | :--- |
+| `clickFirstChild(parent)` | Clicks the first clickable child of the specified parent tag. |
+| `clickLastChild(parent)` | Clicks the last clickable child of the specified parent tag. |
+| `clickChildAtIndex(parent, i)`| Clicks the child at the specific index within the parent. |
+| `clickDescendant(parent, match)`| Clicks a descendant of the parent that matches the provided criteria. |
+| `clickSibling(tag, matcher)` | Clicks a sibling of the specified tag that matches the matcher. |
+
+---
 
 These actions use UIAutomator internally to interact with the Android OS outside the Compose bounds. They automatically handle synchronization with the Compose clock.
 
@@ -163,6 +185,30 @@ These actions use UIAutomator internally to interact with the Android OS outside
 | `openNotificationShade()`| Opens the Android notification tray. |
 | `clickNotification(text)` | Finds and clicks a notification by its text. |
 | `toggleQuickSetting(name)`| Toggles a system quick setting tile (e.g., "Dark mode"). |
+
+### `onDevice { ... }` Scope
+Provides direct access to UI Automator for hardware and OS-level control.
+
+#### Example Usage:
+```kotlin
+onDevice {
+    pressRecentApps()
+    clearNotifications()
+    setOrientation(landscape = true)
+}
+```
+
+| Method | Description |
+| :--- | :--- |
+| `pressKey(keyCode)` | Presses a physical hardware key. |
+| `pressHome()` / `pressBack()` | Navigation hardware keys. |
+| `pressRecentApps()` | Opens the recent apps screen. |
+| `pressDPadCenter()` | Presses the DPad center button. |
+| `executeShell(command)` | Executes a shell command and returns the output. |
+| `wakeUp()` / `sleep()` | Controls the screen power state. |
+| `unlock()` | Dismisses the keyguard (lock screen). |
+| `freezeRotation()` | Locks the current screen orientation. |
+| `clearNotifications()` | Opens the notification shade and clicks "Clear all". |
 
 ---
 
@@ -286,10 +332,18 @@ waitUntil(timeoutMillis = 2000) {
 }
 ```
 
+### Specialized Waits
+*   `waitUntilExists(matcher)`: Waits until exactly one node matching the criteria exists.
+*   `waitUntilDoesNotExist(tag)`: Waits until a specific tag is removed from the tree.
+*   `waitUntilNodeCount(matcher, count)`: Waits until a specific number of nodes match.
+
 ### `SemanticsMatchers`
-Custom matchers for specialized roles.
+Custom matchers for specialized roles and relationships.
 *   `isButton()`, `isCheckbox()`, `isSwitch()`, `isTab()`
+*   `isDialog()`, `isPopup()`, `isHeading()`
+*   `hasStateDescription(text)`
 *   `hasContentDescriptionRegex(regex)`
+*   `hasAnyDescendant(matcher)`, `hasAnyAncestor(matcher)`, `hasAnySibling(matcher)`
 
 ---
 

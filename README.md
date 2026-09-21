@@ -116,10 +116,11 @@ Every extension method in the engine (like `clickOnTag`, `enterText`, `swipe`) i
 
 | Action Category | Examples | Benefits |
 | :--- | :--- | :--- |
-| **Gestures** | `clickOnTag`, `doubleTap`, `longPress`, `dragAndDrop`, `pinchToZoom`, `rotate`, `multiFingerSwipe` | Handles complex multi-touch interactions including orbital rotation and multi-finger patterns. |
+| **Gestures** | `clickOnTag`, `mouseClick`, `rotaryScroll`, `dragAndDrop`, `pinchToZoom`, `rotate`, `multiFingerSwipe` | Handles complex interactions including desktop mouse simulation, Wear OS rotary input, and orbital rotation. |
 | **Text Input** | `enterText`, `replaceText`, `clearText`, `pressImeAction`, `requestFocus` | Ensures the keyboard is ready and verifies state after input. |
 | **Scrolling** | `scrollToTag`, `scrollToIndex`, `scrollToKey`, `swipeUntilVisible` | Prevents "Node not found" errors in long LazyColumns and dynamic lists. |
-| **System** | `pressBack`, `pressHome`, `handlePermissionDialog`, `openNotificationShade`, `clickNotification`, `toggleQuickSetting` | Deep integration with Android OS, including notifications and system settings via UIAutomator. |
+| **Hierarchy** | `clickFirstChild`, `clickLastChild`, `clickChildAtIndex`, `clickSibling` | Targets nodes by position or relationship without needing unique tags for every sub-element. |
+| **System** | `pressBack`, `onDevice { pressHome() }`, `handlePermissionDialog`, `clearNotifications`, `toggleQuickSetting` | Deep integration with Android OS via the `onDevice` scope, including hardware keys and shell commands. |
 | **Accessibility**| `navigateByAccessibility`, `assertFocusOrder`, `assertInteractiveNodesHaveLabels` | Automated focus traversal simulation and batch audits for accessibility compliance. |
 | **Guardrails** | `resourcePrefix = "engine_"` | Built-in lint rules and naming conventions to prevent resource collisions in host apps. |
 
@@ -136,7 +137,7 @@ On every `AssertionError` (or any test failure), a high-resolution screenshot is
 The engine automatically captures the last 100 lines of Logcat (`.log`) and can optionally dump the Android View hierarchy (`.xml`). A global `TestWatcher` ensures these are captured even for failures outside the `runRobustly` pipeline.
 
 ### Semantics Tree Dump
-The engine dumps the entire **unmerged semantics tree** to Logcat under the `ComposeAutomation` tag. This reveals the exact state of the UI at the microsecond of failure.
+The engine dumps the entire **unmerged semantics tree** to Logcat under the `ComposeAutomation` tag. You can also capture it as a string via `dumpSemantics()`.
 
 ### Log4j2 Integration
 The entire engine is instrumented with Log4j2. You can see every internal decision in your logs:
@@ -157,8 +158,9 @@ DEBUG GestureActions - Performing semantics click on tag: login_button
 Testing animations? The Engine provides a safer way to manipulate the `MainTestClock`.
 
 *   **`advanceTime(ms)`**: Advances the clock by a specific duration.
-*   **`advanceTimeUntil(condition)`**: Advances the clock in frame-increments until a UI state is met (perfect for finishing animations).
-*   **`withPausedClock { /* ... */ }`**: Automatically pauses the clock, runs your logic, and resumes it, ensuring no side effects on other tests.
+*   **`advanceTimeUntil(condition)`**: Advances the clock in frame-increments until a UI state is met.
+*   **`waitUntilExists(matcher)`**: Robust polling until a specific node appears.
+*   **`withPausedClock { /* ... */ }`**: Automatically pauses the clock, runs your logic, and resumes it.
 
 ---
 
@@ -268,7 +270,7 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "0.3.0-beta06"
+engine = "0.3.0-rc01"
 
 [libraries]
 uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "robot-testing-engine", version.ref = "engine" }

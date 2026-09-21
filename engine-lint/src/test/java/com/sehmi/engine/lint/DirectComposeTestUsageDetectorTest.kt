@@ -28,6 +28,16 @@ class DirectComposeTestUsageDetectorTest : LintDetectorTest() {
         class SemanticsNodeInteraction
     """).indented()
 
+    private val AUTOMATOR_TEST_STUBS: TestFile = kotlin("""
+        package androidx.test.uiautomator
+        class UiDevice {
+            fun findObject(selector: Any): Any = TODO()
+            fun pressBack(): Boolean = TODO()
+        }
+    """).indented()
+
+    private val EXPECTED_MSG = "UI automation actions must use the high-level com.sehmi.engine DSL extensions instead of direct testing APIs to ensure robustness and diagnostic capture."
+
     fun testDirectPerformClick() {
         lint().files(
             COMPOSE_TEST_STUBS,
@@ -45,7 +55,7 @@ class DirectComposeTestUsageDetectorTest : LintDetectorTest() {
         )
         .run()
         .expect("""
-            src/com/example/test/MyTest.kt:7: Error: UI automation actions must use the high-level com.sehmi.engine DSL extensions instead of direct Compose/Espresso testing APIs. [DirectUiTestApiUsage]
+            src/com/example/test/MyTest.kt:7: Error: $EXPECTED_MSG [DirectUiTestApiUsage]
                     onNodeWithTag("tag").performClick()
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
@@ -77,33 +87,26 @@ class DirectComposeTestUsageDetectorTest : LintDetectorTest() {
         .expectClean()
     }
 
-    fun testDirectAssertion() {
+    fun testDirectAutomator() {
         lint().files(
-            COMPOSE_TEST_STUBS,
+            AUTOMATOR_TEST_STUBS,
             kotlin("""
                 package com.example.test
-                import androidx.compose.ui.test.onNodeWithTag
-                import androidx.compose.ui.test.assertIsDisplayed
+                import androidx.test.uiautomator.UiDevice
 
                 class MyTest {
-                    fun test() {
-                        onNodeWithTag("tag").assertIsDisplayed()
+                    fun test(device: UiDevice) {
+                        device.findObject(null)
                     }
                 }
             """).indented()
         )
         .run()
         .expect("""
-            src/com/example/test/MyTest.kt:7: Error: UI automation actions must use the high-level com.sehmi.engine DSL extensions instead of direct Compose/Espresso testing APIs. [DirectUiTestApiUsage]
-                    onNodeWithTag("tag").assertIsDisplayed()
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/example/test/MyTest.kt:6: Error: $EXPECTED_MSG [DirectUiTestApiUsage]
+                    device.findObject(null)
+                    ~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
         """)
-        .expectFixDiffs("""
-            Fix for src/com/example/test/MyTest.kt line 7: Replace with assertTagDisplayed(...):
-            @@ -7 +7 @@
-            -        onNodeWithTag("tag").assertIsDisplayed()
-            +        assertTagDisplayed("tag")
-        """.trimIndent())
     }
 }

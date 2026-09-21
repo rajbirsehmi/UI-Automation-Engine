@@ -1,6 +1,7 @@
 package com.sehmi.engine.utils
 
 import android.util.Log
+import androidx.compose.ui.test.*
 import com.sehmi.engine.UiTestEngine
 import com.sehmi.engine.actions.captureLogcat
 import com.sehmi.engine.actions.captureViewHierarchy
@@ -62,6 +63,63 @@ internal fun <T> ComposeRuleScope.waitUntil(
 
     logger.error("waitUntil timed out after $timeoutMillis ms")
     throw lastError ?: RuntimeException("Timeout reached during waitUntil without specific error.")
+}
+
+/**
+ * Robustly waits until exactly one node matching the given [matcher] exists.
+ *
+ * @param matcher The [SemanticsMatcher] to identify the node.
+ * @param useUnmergedTree Whether to use the unmerged semantics tree.
+ * @param timeoutMillis Maximum time to wait.
+ */
+fun ComposeRuleScope.waitUntilExists(
+    matcher: SemanticsMatcher,
+    useUnmergedTree: Boolean = false,
+    timeoutMillis: Long = UiTestEngine.config.defaultTimeoutMillis
+) {
+    logger.infoStep("Waiting until node exists: $matcher")
+    runRobustly("Wait until exists: $matcher") {
+        waitUntil(timeoutMillis = timeoutMillis) {
+            uiTestEngineRule.onNode(matcher, useUnmergedTree).assertExists()
+        }
+    }
+}
+
+/**
+ * Robustly waits until the node identified by [tag] does not exist.
+ *
+ * @param tag The test tag of the node.
+ * @param useUnmergedTree Whether to use the unmerged semantics tree.
+ * @param timeoutMillis Maximum time to wait.
+ */
+fun ComposeRuleScope.waitUntilDoesNotExist(
+    tag: String,
+    useUnmergedTree: Boolean = false,
+    timeoutMillis: Long = UiTestEngine.config.defaultTimeoutMillis
+) {
+    logger.infoStep("Waiting until tag does not exist: $tag")
+    runRobustly("Wait until tag disappears: $tag") {
+        waitUntil(timeoutMillis = timeoutMillis) {
+            uiTestEngineRule.onNodeWithTag(tag, useUnmergedTree).assertDoesNotExist()
+        }
+    }
+}
+
+/**
+ * Robustly waits until exactly [count] nodes matching the [matcher] exist.
+ */
+fun ComposeRuleScope.waitUntilNodeCount(
+    matcher: SemanticsMatcher,
+    count: Int,
+    useUnmergedTree: Boolean = false,
+    timeoutMillis: Long = UiTestEngine.config.defaultTimeoutMillis
+) {
+    logger.infoStep("Waiting until node count is $count for: $matcher")
+    runRobustly("Wait until node count is $count for: $matcher") {
+        waitUntil(timeoutMillis = timeoutMillis) {
+            uiTestEngineRule.onAllNodes(matcher, useUnmergedTree).assertCountEquals(count)
+        }
+    }
 }
 
 /**
