@@ -1,4 +1,17 @@
-# 🚀 Release Notes - v0.3.0-beta04
+# 🚀 Release Notes - v0.3.0-beta05
+
+## [0.3.0-beta05] - 2026-11-16
+
+### ✨ Global Diagnostic Capture
+- **Universal Failure Monitoring**: Introduced `FailureDiagnosticWatcher`, a JUnit `TestWatcher` that automatically triggers diagnostics for *any* test failure. This ensures screenshots are captured even when using standard Compose assertions or when failures occur outside the engine's robust action pipeline.
+- **Redundancy Prevention**: A new thread-local tracking system prevents multiple diagnostic captures for a single failure, keeping your artifacts directory clean and focused.
+
+### 🛡️ Robust Artifact Storage
+- **Multi-Path Fallbacks**: The engine now intelligently resolves storage locations for screenshots and logs. It iterates through prioritized candidates (config, instrumentation args, external cache, internal cache) until a writable directory is found.
+- **Writability Validation**: Improved error handling and logging when storage directories are restricted or full.
+
+### 💉 Hilt Reliability
+- **Improved DI Lifecycle Sync**: The `HiltAutomationComposeTestRule` now integrates directly with the global diagnostic watcher, ensuring Hilt-based tests benefit from the same high-fidelity failure reports as standard tests.
 
 ## [0.3.0-beta04] - 2026-11-15
 

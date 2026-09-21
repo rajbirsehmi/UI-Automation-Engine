@@ -18,12 +18,14 @@ class HiltAutomationComposeTestRule<A : ComponentActivity>(
     private val uiTestEngineRule: AndroidComposeTestRule<*, A>,
 ) : ComposeContentTestRule by uiTestEngineRule {
 
+    private val diagnosticWatcher = FailureDiagnosticWatcher()
+
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
                 UiTestEngine.setComposeRule(uiTestEngineRule)
                 try {
-                    uiTestEngineRule.apply(base, description).evaluate()
+                    diagnosticWatcher.apply(uiTestEngineRule.apply(base, description), description).evaluate()
                 } finally {
                     UiTestEngine.clearComposeRule()
                 }
