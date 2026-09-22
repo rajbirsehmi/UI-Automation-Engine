@@ -74,6 +74,12 @@ android {
             testInstrumentationRunner = "com.sehmi.engine.HiltTestRunner"
         }
     }
+    dokka {
+        dokkaSourceSets.configureEach {
+            // Suppress all variants except standardRelease to avoid duplicate source roots error
+            suppress.set(name != "standardRelease")
+        }
+    }
 }
 
 tasks.dokkaHtml.configure {
