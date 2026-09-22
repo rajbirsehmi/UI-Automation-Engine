@@ -15,7 +15,7 @@ testRunner = "1.7.0"
 log4j = "2.26.1"
 hilt = "2.60.1"
 ksp = "2.3.12"
-dokka = "1.9.0" # DO NOT UPDATE DOKKA NO MATTER WHAT!!!!!!
+dokka = "1.9.20" # DO NOT UPDATE DOKKA NO MATTER WHAT!!!!!!
 
 [libraries]
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
