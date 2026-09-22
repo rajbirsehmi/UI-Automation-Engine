@@ -1,3 +1,10 @@
+# 🚀 Release Notes - v0.3.0-rc02
+
+## [0.3.0-rc02] - 2026-11-23
+
+### 🔄 Maintenance
+- **Version Bump**: Update version number bump with no code changes.
+
 # 🚀 Release Notes - v0.3.0-rc01
 
 ## [0.3.0-rc01] - 2026-11-22
