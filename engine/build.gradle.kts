@@ -74,12 +74,6 @@ android {
             testInstrumentationRunner = "com.sehmi.engine.HiltTestRunner"
         }
     }
-    dokka {
-        dokkaSourceSets.configureEach {
-            // Suppress all variants except standardRelease to avoid duplicate source roots error
-            suppress.set(name != "standardRelease")
-        }
-    }
 }
 
 tasks.dokkaHtml.configure {
@@ -139,7 +133,7 @@ publishing {
         register<MavenPublication>("maven") {
             groupId = "com.github.rajbirsehmi.UI-Automation-Engine"
             artifactId = "robot-testing-engine"
-            version = "0.3.0-rc02"
+            version = "0.3.0-rc03"
 
             afterEvaluate {
                 from(components["engine"])
