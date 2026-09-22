@@ -1,4 +1,9 @@
-# 🚀 Release Notes - v0.3.0-rc03
+# 🚀 Release Notes - v0.3.0-rc03_1
+
+## [0.3.0-rc03_1]
+
+### 🔄 Maintenance
+- **Version Bump**: Update version number bump with no code changes.
 
 ## [0.3.0-rc03]
 
