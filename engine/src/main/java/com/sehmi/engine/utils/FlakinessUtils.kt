@@ -5,6 +5,7 @@ import androidx.compose.ui.test.*
 import com.sehmi.engine.UiTestEngine
 import com.sehmi.engine.actions.captureLogcat
 import com.sehmi.engine.actions.captureViewHierarchy
+import com.sehmi.engine.actions.generateHtmlReport
 import com.sehmi.engine.actions.takeScreenshot
 import com.sehmi.engine.core.ComposeRuleScope
 import com.sehmi.engine.matchers.printUnmergedTree
@@ -203,6 +204,7 @@ internal fun <T> ComposeRuleScope.runRobustly(
         var screenshotPath: String? = null
         var logcatPath: String? = null
         var hierarchyPath: String? = null
+        var htmlReportPath: String? = null
         
         if (!UiTestEngine.wasDiagnosticsCaptured) {
             try {
@@ -222,6 +224,18 @@ internal fun <T> ComposeRuleScope.runRobustly(
                     logger.debugStep("Capturing diagnostics: captureViewHierarchy({})", failureName)
                     hierarchyPath = captureViewHierarchy(failureName)
                 }
+                if (UiTestEngine.config.autoGenerateHtmlReport) {
+                    logger.debugStep("Capturing diagnostics: generateHtmlReport({})", failureName)
+                    htmlReportPath = generateHtmlReport(
+                        name = failureName,
+                        description = description,
+                        tag = tag,
+                        error = e,
+                        screenshotPath = screenshotPath,
+                        logcatPath = logcatPath,
+                        hierarchyPath = hierarchyPath
+                    )
+                }
                 UiTestEngine.wasDiagnosticsCaptured = true
             } catch (diagError: Throwable) {
                 Log.e("ComposeAutomation", "Failed to capture diagnostics: ${diagError.message}")
@@ -237,6 +251,7 @@ internal fun <T> ComposeRuleScope.runRobustly(
             |  - Screenshot: ${screenshotPath ?: "See log for path (already captured or failed)"}
             |  - Logcat: ${logcatPath ?: "See log for path"}
             |  - Hierarchy: ${hierarchyPath ?: "See log for path"}
+            |  - HTML Report: ${htmlReportPath ?: "See log for path"}
             |Original Error: ${e.message}
         """.trimMargin()
         

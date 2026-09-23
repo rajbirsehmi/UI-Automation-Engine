@@ -12,7 +12,6 @@ on:
       - 'settings.gradle.kts'
       - 'release-notes.md'
       - '.github/workflows/**'
-      - '.github/workflows/**'
   pull_request:
     branches:
       - main
@@ -23,7 +22,6 @@ on:
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
       - 'release-notes.md'
-      - '.github/workflows/**'
       - '.github/workflows/**'
 
 jobs:
@@ -74,6 +72,19 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -no-snapshot -noaudio -no-boot-anim
           script: ./gradlew :engine:connectedStandardDebugAndroidTest :engine:connectedHiltDebugAndroidTest
+
+      - name: Upload Test Failure Reports & Diagnostic Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-test-failure-reports
+          path: |
+            engine/build/reports/androidTests/
+            engine/build/outputs/connected_android_test_additional_output/
+            **/FAILURE_*
+            **/GLOBAL_FAILURE_*
+            **/ADVANCED_ACTION_FAILURE_*
+          if-no-files-found: ignore
 
       - name: Build Artifacts
         run: ./gradlew :engine:assembleRelease :engine-lint:assemble

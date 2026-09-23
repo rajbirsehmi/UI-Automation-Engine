@@ -34,6 +34,7 @@ class DiagnosticsTest : ComposeRuleScope {
                 autoCaptureScreenshots = true,
                 autoCaptureLogcat = true,
                 autoCaptureViewHierarchy = true,
+                autoGenerateHtmlReport = true,
                 autoDumpSemantics = false
             )
         )
@@ -54,6 +55,7 @@ class DiagnosticsTest : ComposeRuleScope {
         assertTrue(error.message!!.contains("Screenshot:"))
         assertTrue(error.message!!.contains("Logcat:"))
         assertTrue(error.message!!.contains("Hierarchy:"))
+        assertTrue(error.message!!.contains("HTML Report:"))
 
         val dir = File(customDir)
         assertTrue("Directory should be created", dir.exists())
@@ -63,10 +65,18 @@ class DiagnosticsTest : ComposeRuleScope {
         assertTrue("Screenshot should exist", files!!.any { it.extension == "png" })
         assertTrue("Logcat should exist", files.any { it.extension == "log" })
         assertTrue("Hierarchy XML should exist", files.any { it.extension == "xml" })
+        assertTrue("HTML report should exist", files.any { it.extension == "html" })
         
         // Check logcat content (at least non-empty)
         val logFile = files.find { it.extension == "log" }!!
         assertTrue("Logcat file should not be empty", logFile.length() > 0)
+
+        // Check HTML report content
+        val htmlFile = files.find { it.extension == "html" }!!
+        val htmlContent = htmlFile.readText()
+        assertTrue("HTML report should contain title", htmlContent.contains("Test Failure Report"))
+        assertTrue("HTML report should contain failure screenshot section", htmlContent.contains("Failure Screenshot"))
+        assertTrue("HTML report should contain error message", htmlContent.contains("Trigger Diagnostics"))
 
         // Cleanup
         dir.deleteRecursively()

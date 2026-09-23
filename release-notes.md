@@ -1,4 +1,11 @@
-# 🚀 Release Notes - v0.3.0-rc03_1
+# 🚀 Release Notes - v0.3.0-rc03_02
+
+## [0.3.0-rc03_02]
+
+### 📸 HTML Failure Artifacts & Base64 Screenshots
+- **Embedded Failure Screenshots**: Test failures now generate self-contained `.html` report artifacts featuring the failure screenshot embedded directly as a Base64 data URI (`data:image/png;base64,...`).
+- **Comprehensive Failure Diagnostics**: HTML reports bundle failure metadata, action description, target tag, stack trace, Logcat tail, View hierarchy XML, and Compose semantics tree.
+- **GitHub Actions Integration**: Updated CI workflow with `actions/upload-artifact@v4` (`ui-test-failure-reports`) to preserve and link interactive HTML reports in workflow summaries.
 
 ## [0.3.0-rc03_1]
 

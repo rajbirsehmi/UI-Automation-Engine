@@ -11,6 +11,10 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import com.sehmi.engine.UiTestEngine
+import com.sehmi.engine.actions.captureLogcat
+import com.sehmi.engine.actions.captureViewHierarchy
+import com.sehmi.engine.actions.generateHtmlReport
 import com.sehmi.engine.actions.takeScreenshot
 import com.sehmi.engine.assertions.assertTagDisplayed
 import com.sehmi.engine.core.ComposeRuleScope
@@ -162,12 +166,29 @@ fun ComposeRuleScope.executeAdvancedAction(
     } catch (e: Throwable) {
         // Resilience: Capture diagnostics before rethrowing as AssertionError
         logger.debugStep("Advanced action failed. Capturing diagnostics...")
-        printUnmergedTree(testTag)
-        takeScreenshot("ADVANCED_ACTION_FAILURE_${System.currentTimeMillis()}")
+        val timestamp = System.currentTimeMillis()
+        val failureName = "ADVANCED_ACTION_FAILURE_$timestamp"
+        if (UiTestEngine.config.autoDumpSemantics) {
+            printUnmergedTree(testTag)
+        }
+        val screenshotPath = if (UiTestEngine.config.autoCaptureScreenshots) takeScreenshot(failureName) else null
+        val logcatPath = if (UiTestEngine.config.autoCaptureLogcat) captureLogcat(failureName, UiTestEngine.config.logcatTailLines) else null
+        val hierarchyPath = if (UiTestEngine.config.autoCaptureViewHierarchy) captureViewHierarchy(failureName) else null
+        val htmlReportPath = if (UiTestEngine.config.autoGenerateHtmlReport) {
+            generateHtmlReport(
+                name = failureName,
+                description = "Advanced action pipeline failed for tag: ${testTag ?: "N/A"}",
+                tag = testTag,
+                error = e,
+                screenshotPath = screenshotPath,
+                logcatPath = logcatPath,
+                hierarchyPath = hierarchyPath
+            )
+        } else null
         
         throw AssertionError(
             "Advanced action pipeline failed for tag: ${testTag ?: "N/A"}. " +
-            "Semantics tree and failure screenshot captured for diagnostics.",
+            "Diagnostic artifacts captured: Screenshot=${screenshotPath ?: "N/A"}, HTML Report=${htmlReportPath ?: "N/A"}",
             e
         )
     }

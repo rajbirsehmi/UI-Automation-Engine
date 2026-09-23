@@ -224,7 +224,8 @@ UiTestEngine.configure(
         verboseLogging = false,         // Cleaner Logcat for passing tests
         autoCaptureScreenshots = true,  // Capture screenshot on failure
         autoDumpSemantics = true,       // Dump semantics tree on failure
-        autoCaptureLogcat = true        // Capture logcat tail on failure
+        autoCaptureLogcat = true,       // Capture logcat tail on failure
+        autoGenerateHtmlReport = true   // Generate self-contained HTML failure report with embedded Base64 screenshot
     )
 )
 ```
@@ -270,7 +271,7 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "0.3.0-rc03_1"
+engine = "0.3.0-rc03_02"
 
 [libraries]
 uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "robot-testing-engine", version.ref = "engine" }

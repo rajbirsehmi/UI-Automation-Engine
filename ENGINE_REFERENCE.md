@@ -54,6 +54,7 @@ fun setupEngine() {
 | `autoDumpSemantics` | `true` | Automatically dumps the unmerged tree on failure. |
 | `autoCaptureLogcat` | `true` | Automatically captures a Logcat tail on failure. |
 | `autoCaptureViewHierarchy`| `false`| Automatically dumps the Android View hierarchy on failure. |
+| `autoGenerateHtmlReport` | `true` | Automatically generates an HTML failure report artifact with embedded Base64 screenshot on failure. |
 | `logcatTailLines` | `100` | Number of Logcat lines to capture on failure. |
 | `verboseLogging` | `true` | Enables high-level "Starting/Completed" logs for every step. |
 
@@ -344,10 +345,14 @@ The engine's "secret sauce." Every action is wrapped in this.
     3.  Takes a screenshot named `FAILURE_<timestamp>.png` (using robust multi-path resolution).
     4.  Captures a Logcat tail to `FAILURE_<timestamp>.log`.
     5.  (Optional) Dumps the View hierarchy to `FAILURE_<timestamp>.xml`.
-    6.  Throws an `AssertionError` with all this context attached.
+    6.  Generates a self-contained HTML failure report artifact (`FAILURE_<timestamp>.html`) containing the embedded Base64 failure screenshot, failure metadata, stack trace, Logcat, View hierarchy, and Semantics tree.
+    7.  Throws an `AssertionError` with all this context attached.
 
 ### `FailureDiagnosticWatcher`
 A global JUnit `TestWatcher` that serves as a fallback for `runRobustly`. It ensures that *any* test failure triggers a diagnostic capture, even if the engine's robustness pipeline was not directly involved. It automatically skips capture if `runRobustly` already completed it for the current failure.
+
+### CI Artifact Uploads
+When running in GitHub Actions, test failure diagnostic artifacts—including the self-contained HTML reports (`.html`), Base64 screenshots (`.png`), Logcat logs (`.log`), and View hierarchies (`.xml`)—are automatically captured and uploaded using `actions/upload-artifact@v4` under the artifact name `ui-test-failure-reports`. You can download and open the `.html` report directly in any browser from the GitHub Actions run summary.
 
 ### `waitUntil`
 A polling utility used internally for flakiness resilience.

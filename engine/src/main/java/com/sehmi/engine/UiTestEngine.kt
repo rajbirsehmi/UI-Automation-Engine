@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.sehmi.engine.actions.captureLogcat
 import com.sehmi.engine.actions.captureViewHierarchy
+import com.sehmi.engine.actions.generateHtmlReport
 import com.sehmi.engine.actions.takeScreenshot
 import com.sehmi.engine.core.ComposeRuleScope
 import com.sehmi.engine.matchers.printUnmergedTree
@@ -67,6 +68,8 @@ object UiTestEngine {
         val autoCaptureLogcat: Boolean = true,
         /** Whether to automatically dump the Android View hierarchy on failure. */
         val autoCaptureViewHierarchy: Boolean = false,
+        /** Whether to automatically generate an HTML failure report artifact on failure. */
+        val autoGenerateHtmlReport: Boolean = true,
         /** The number of Logcat lines to capture on failure. */
         val logcatTailLines: Int = 100,
         /** Whether to enable test tags as resource IDs for UI Automator interop. */
@@ -203,6 +206,10 @@ class FailureDiagnosticWatcher : TestWatcher() {
         Log.e("ComposeAutomation", "Test failed: ${description.displayName}. Capturing diagnostics...")
         
         try {
+            var screenshotPath: String? = null
+            var logcatPath: String? = null
+            var hierarchyPath: String? = null
+
             if (UiTestEngine.config.autoDumpSemantics) {
                 // We can't easily access the rule here without it being set, 
                 // but it should be set in the current thread.
@@ -216,13 +223,23 @@ class FailureDiagnosticWatcher : TestWatcher() {
                 }
             }
             if (UiTestEngine.config.autoCaptureScreenshots) {
-                takeScreenshot(failureName)
+                screenshotPath = takeScreenshot(failureName)
             }
             if (UiTestEngine.config.autoCaptureLogcat) {
-                captureLogcat(failureName, UiTestEngine.config.logcatTailLines)
+                logcatPath = captureLogcat(failureName, UiTestEngine.config.logcatTailLines)
             }
             if (UiTestEngine.config.autoCaptureViewHierarchy) {
-                captureViewHierarchy(failureName)
+                hierarchyPath = captureViewHierarchy(failureName)
+            }
+            if (UiTestEngine.config.autoGenerateHtmlReport) {
+                generateHtmlReport(
+                    name = failureName,
+                    description = "Global Test Failure: ${description.displayName}",
+                    error = e,
+                    screenshotPath = screenshotPath,
+                    logcatPath = logcatPath,
+                    hierarchyPath = hierarchyPath
+                )
             }
             UiTestEngine.wasDiagnosticsCaptured = true
         } catch (diagError: Throwable) {

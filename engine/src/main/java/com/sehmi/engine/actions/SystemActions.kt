@@ -1,6 +1,7 @@
 package com.sehmi.engine.actions
 
 import android.os.Bundle
+import android.util.Base64
 import com.sehmi.engine.UiTestEngine
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -12,6 +13,11 @@ import com.sehmi.engine.utils.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private val logger: Logger = LogManager.getLogger("SystemActions")
 
@@ -272,6 +278,338 @@ internal fun captureViewHierarchy(name: String): String? {
         file.absolutePath
     } catch (e: Exception) {
         logger.error("Failed to dump window hierarchy", e)
+        null
+    }
+}
+
+private fun String.escapeHtml(): String {
+    return this.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&#39;")
+}
+
+private fun encodeFileToBase64(filePath: String): String? {
+    return try {
+        val file = File(filePath)
+        if (!file.exists() || !file.isFile) return null
+        val bytes = file.readBytes()
+        try {
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (e: Throwable) {
+            java.util.Base64.getEncoder().encodeToString(bytes)
+        }
+    } catch (e: Throwable) {
+        logger.error("Failed to Base64 encode file $filePath: ${e.message}", e)
+        null
+    }
+}
+
+/**
+ * Generates an HTML failure report artifact containing the embedded Base64 failure screenshot,
+ * test/action metadata, original error details, Logcat output, View hierarchy XML, and semantics tree dump.
+ *
+ * @param name Base name for the HTML report file (excluding .html extension).
+ * @param description Human-readable description of the failed test action or test name.
+ * @param tag Target test tag associated with the failure, if available.
+ * @param error Original error/exception thrown during test execution.
+ * @param screenshotPath Absolute path to the captured screenshot PNG file, if available.
+ * @param logcatPath Absolute path to the captured Logcat log file, if available.
+ * @param hierarchyPath Absolute path to the captured View hierarchy XML file, if available.
+ * @param semanticsTree Content of the dumped semantics tree, if available.
+ * @return Absolute path to the generated HTML artifact, or null if creation failed.
+ */
+internal fun generateHtmlReport(
+    name: String,
+    description: String,
+    tag: String? = null,
+    error: Throwable? = null,
+    screenshotPath: String? = null,
+    logcatPath: String? = null,
+    hierarchyPath: String? = null,
+    semanticsTree: String? = null
+): String? {
+    logger.infoStep("Starting generateHtmlReport: name=$name")
+    val targetDir = getDiagnosticDirectory() ?: return null
+    val file = File(targetDir, "$name.html")
+
+    return try {
+        val escapedName = name.escapeHtml()
+        val escapedDescription = description.escapeHtml()
+        val escapedTag = (tag ?: "N/A").escapeHtml()
+        val formattedTimestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
+
+        val exceptionType = error?.javaClass?.name ?: "Unknown Exception"
+        val stackTraceText = error?.let { err ->
+            val sw = StringWriter()
+            val pw = PrintWriter(sw)
+            err.printStackTrace(pw)
+            sw.toString()
+        } ?: "No stack trace available."
+        val escapedStackTrace = stackTraceText.escapeHtml()
+
+        val screenshotHtml = if (screenshotPath != null) {
+            val base64Data = encodeFileToBase64(screenshotPath)
+            if (base64Data != null) {
+                """
+                <div class="screenshot-container">
+                    <a href="data:image/png;base64,$base64Data" target="_blank" title="Click to open full resolution image">
+                        <img src="data:image/png;base64,$base64Data" alt="Failure Screenshot" class="screenshot-img" />
+                    </a>
+                    <p class="file-path">Saved at: <code>${screenshotPath.escapeHtml()}</code></p>
+                </div>
+                """.trimIndent()
+            } else {
+                """
+                <div class="screenshot-container">
+                    <p class="file-path">Screenshot saved at: <code>${screenshotPath.escapeHtml()}</code></p>
+                </div>
+                """.trimIndent()
+            }
+        } else {
+            """<p class="file-path">No screenshot captured.</p>""".trimIndent()
+        }
+
+        val logcatHtml = if (logcatPath != null && File(logcatPath).exists()) {
+            val logText = try { File(logcatPath).readText() } catch (e: Exception) { "Could not read logcat file." }
+            """
+            <div class="card">
+                <h2>📜 Logcat Output</h2>
+                <details open>
+                    <summary>Captured Logcat Tail</summary>
+                    <pre><code>${logText.escapeHtml()}</code></pre>
+                </details>
+                <p class="file-path">File: <code>${logcatPath.escapeHtml()}</code></p>
+            </div>
+            """.trimIndent()
+        } else ""
+
+        val hierarchyHtml = if (hierarchyPath != null && File(hierarchyPath).exists()) {
+            val xmlText = try { File(hierarchyPath).readText() } catch (e: Exception) { "Could not read hierarchy file." }
+            """
+            <div class="card">
+                <h2>🌳 Android View Hierarchy</h2>
+                <details>
+                    <summary>View Hierarchy XML Dump</summary>
+                    <pre><code>${xmlText.escapeHtml()}</code></pre>
+                </details>
+                <p class="file-path">File: <code>${hierarchyPath.escapeHtml()}</code></p>
+            </div>
+            """.trimIndent()
+        } else ""
+
+        val semanticsHtml = if (!semanticsTree.isNullOrBlank()) {
+            """
+            <div class="card">
+                <h2>🧩 Compose Semantics Tree</h2>
+                <details>
+                    <summary>Unmerged Semantics Tree Dump</summary>
+                    <pre><code>${semanticsTree.escapeHtml()}</code></pre>
+                </details>
+            </div>
+            """.trimIndent()
+        } else ""
+
+        val htmlContent = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Test Failure Report - $escapedName</title>
+                <style>
+                    :root {
+                        --bg-color: #0f172a;
+                        --card-bg: #1e293b;
+                        --text-color: #f8fafc;
+                        --text-muted: #94a3b8;
+                        --accent-red: #ef4444;
+                        --accent-red-bg: rgba(239, 68, 68, 0.12);
+                        --border-color: #334155;
+                        --code-bg: #090d16;
+                        --accent-blue: #38bdf8;
+                    }
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        background-color: var(--bg-color);
+                        color: var(--text-color);
+                        margin: 0;
+                        padding: 24px;
+                        line-height: 1.5;
+                    }
+                    .container {
+                        max-width: 1200px;
+                        margin: 0 auto;
+                    }
+                    .header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        background: var(--card-bg);
+                        padding: 20px 24px;
+                        border-radius: 12px;
+                        border: 1px solid var(--border-color);
+                        margin-bottom: 24px;
+                    }
+                    .header-title {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+                    .badge-failed {
+                        background: var(--accent-red);
+                        color: #ffffff;
+                        font-weight: 700;
+                        padding: 4px 12px;
+                        border-radius: 20px;
+                        font-size: 0.85rem;
+                        letter-spacing: 0.05em;
+                    }
+                    .title {
+                        font-size: 1.4rem;
+                        font-weight: 700;
+                        margin: 0;
+                    }
+                    .timestamp {
+                        font-size: 0.85rem;
+                        color: var(--text-muted);
+                    }
+                    .card {
+                        background: var(--card-bg);
+                        border: 1px solid var(--border-color);
+                        border-radius: 12px;
+                        padding: 20px 24px;
+                        margin-bottom: 24px;
+                    }
+                    .card h2 {
+                        margin-top: 0;
+                        font-size: 1.15rem;
+                        color: var(--text-color);
+                        border-bottom: 1px solid var(--border-color);
+                        padding-bottom: 10px;
+                    }
+                    .info-grid {
+                        display: grid;
+                        grid-template-columns: minmax(120px, max-content) 1fr;
+                        gap: 8px 16px;
+                        font-size: 0.95rem;
+                        margin-bottom: 12px;
+                    }
+                    .info-label {
+                        font-weight: 600;
+                        color: var(--text-muted);
+                    }
+                    .error-box {
+                        background: var(--accent-red-bg);
+                        border-left: 4px solid var(--accent-red);
+                        padding: 14px 18px;
+                        border-radius: 6px;
+                        font-family: "Consolas", "Monaco", "Courier New", monospace;
+                        white-space: pre-wrap;
+                        word-break: break-word;
+                        color: #fca5a5;
+                        font-size: 0.9rem;
+                    }
+                    .screenshot-container {
+                        text-align: center;
+                        margin-top: 12px;
+                    }
+                    .screenshot-img {
+                        max-width: 100%;
+                        max-height: 700px;
+                        border-radius: 8px;
+                        border: 2px solid var(--border-color);
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+                        transition: transform 0.2s ease;
+                    }
+                    .screenshot-img:hover {
+                        transform: scale(1.01);
+                    }
+                    pre {
+                        background: var(--code-bg);
+                        padding: 16px;
+                        border-radius: 8px;
+                        overflow-x: auto;
+                        font-family: "Consolas", "Monaco", "Courier New", monospace;
+                        font-size: 0.85rem;
+                        color: #e2e8f0;
+                        border: 1px solid var(--border-color);
+                        max-height: 400px;
+                        white-space: pre-wrap;
+                        word-break: break-word;
+                    }
+                    details {
+                        margin-top: 12px;
+                        background: var(--code-bg);
+                        border: 1px solid var(--border-color);
+                        border-radius: 8px;
+                        padding: 12px 16px;
+                    }
+                    summary {
+                        cursor: pointer;
+                        font-weight: 600;
+                        color: var(--accent-blue);
+                        outline: none;
+                    }
+                    summary:hover {
+                        text-decoration: underline;
+                    }
+                    code {
+                        font-family: "Consolas", "Monaco", "Courier New", monospace;
+                        background: rgba(255,255,255,0.08);
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-size: 0.88rem;
+                    }
+                    .file-path {
+                        color: var(--text-muted);
+                        font-size: 0.85rem;
+                        margin-top: 8px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="header-title">
+                            <span class="badge-failed">FAILED</span>
+                            <h1 class="title">$escapedName</h1>
+                        </div>
+                        <div class="timestamp">$formattedTimestamp</div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📋 Failure Details</h2>
+                        <div class="info-grid">
+                            <div class="info-label">Action:</div>
+                            <div>$escapedDescription</div>
+                            <div class="info-label">Target Tag:</div>
+                            <div><code>$escapedTag</code></div>
+                            <div class="info-label">Exception:</div>
+                            <div><code>${exceptionType.escapeHtml()}</code></div>
+                        </div>
+                        <div class="error-box">$escapedStackTrace</div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📸 Failure Screenshot</h2>
+                        $screenshotHtml
+                    </div>
+
+                    $logcatHtml
+                    $hierarchyHtml
+                    $semanticsHtml
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+
+        file.writeText(htmlContent)
+        logger.debugStep("HTML failure report generated at: ${file.absolutePath}")
+        file.absolutePath
+    } catch (e: Exception) {
+        logger.error("Failed to generate HTML failure report", e)
         null
     }
 }
