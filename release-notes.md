@@ -1,4 +1,9 @@
-# 🚀 Release Notes - v0.3.0-rc03_02
+# 🚀 Release Notes - v0.3.0-rc04
+
+## [0.3.0-rc04]
+
+### 🔄 Maintenance
+- **Version Bump**: Updated library version to `0.3.0-rc04`.
 
 ## [0.3.0-rc03_02]
 
