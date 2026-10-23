@@ -128,26 +128,15 @@ dependencies {
     "kspAndroidTestHilt"(libs.hilt.compiler)
 }
 
-publishing {
-    publications {
-        register<MavenPublication>("maven") {
-            groupId = "com.github.rajbirsehmi.UI-Automation-Engine"
-            artifactId = "engine"
-            version = "1.0.0"
-
-            afterEvaluate {
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
                 from(components["engine"])
+                groupId = "com.github.rajbirsehmi"
+                artifactId = "engine"
+                version = "1.0.1"
                 artifact(tasks.named("dokkaJavadocJar"))
-            }
-        }
-    }
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/rajbirsehmi/UI-Automation-Engine")
-            credentials {
-                username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }
