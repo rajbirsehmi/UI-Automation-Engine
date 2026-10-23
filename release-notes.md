@@ -1,4 +1,12 @@
-# 🚀 Release Notes - v0.3.0-rc04
+# 🚀 Release Notes - v1.0.0
+
+## [1.0.0]
+
+### 🎉 Stable 1.0.0 Release
+- **Production-Ready UI Automation Engine**: Officially graduating to v1.0.0 for robust Jetpack Compose UI testing using the Robot Pattern.
+- **Artifact ID Update**: Streamlined artifact ID from `robot-testing-engine` to `engine`.
+- **Advanced Diagnostics**: Self-contained HTML failure reports with base64-embedded screenshots, Logcat tail capture, and XML view hierarchy dumps.
+- **Hilt & Standard DI Support**: Seamless integration for both standard and Hilt-based Android projects.
 
 ## [0.3.0-rc04]
 
