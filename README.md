@@ -271,7 +271,7 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "1.0.0"
+engine = "1.0.1"
 
 [libraries]
 uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "engine", version.ref = "engine" }
