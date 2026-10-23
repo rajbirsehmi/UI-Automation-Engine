@@ -271,10 +271,10 @@ Add the following to your `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-engine = "0.3.0-rc04"
+engine = "1.0.0"
 
 [libraries]
-uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "robot-testing-engine", version.ref = "engine" }
+uiengine = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "engine", version.ref = "engine" }
 engine-lint = { group = "com.github.rajbirsehmi.UI-Automation-Engine", name = "engine-lint", version.ref = "engine" }
 ```
 
