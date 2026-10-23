@@ -39,9 +39,9 @@ configure<PublishingExtension> {
     publications {
         register<MavenPublication>("maven") {
             from(components["java"])
-            groupId = "com.github.rajbirsehmi.UI-Automation-Engine"
+            groupId = "com.github.rajbirsehmi"
             artifactId = "engine-lint"
-            version = "1.0.0"
+            version = "1.0.1"
         }
     }
 }
